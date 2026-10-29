@@ -49,6 +49,10 @@
   - `update-sw-version.js` and `vite.config.ts` generate `public/version.json` from `package.json` (`version`, `buildVersion`, `commitSha`, `buildNumber`, `timestamp`).
   - `vite.config.ts` sets `base: process.env.GITHUB_PAGES === 'true' ? '/arrovian-atropos/' : '/'` and configures `vite-plugin-pwa` (`scope: base`, `start_url: base`) for GitHub Pages deployment via `.github/workflows/deploy.yml`.
   - `src/hooks/useAppUpdate.ts` polls `./version.json?t=...` (`cache: 'no-store'`) and checks Service Worker registration on load, every 20s, and on window `focus`/`online`. When a new source version is detected, the local PWA automatically clears outdated caches, sends `SKIP_WAITING`, and reloads.
+- **Post-Push Source Code Bundle & NotebookLM Sync (`combined_source_code.txt`)**:
+  - `concat-source.js` (`npm run bundle`) bundles all project source and configuration files into `combined_source_code.txt` at the repository root, delimited by `/* === FILE: <relativePath> === */` headers.
+  - `.githooks/pre-commit` automatically runs `node concat-source.js` and stages `combined_source_code.txt` on every commit.
+  - **Mandatory Post-Push Action**: Immediately after every `git push` to GitHub, follow the `.agents/skills/sync-source-to-notebook/SKILL.md` workflow to upload the updated `combined_source_code.txt` to the `Hidden Dictator Game` NotebookLM notebook (`2b675003-edce-43bf-91cd-5d0ee2c33f77`) (and remove any superseded `combined_source_code.txt` source) so the Gemini app always has access to the latest source code.
 - **Layout**:
   ```text
   src/

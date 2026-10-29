@@ -1,7 +1,7 @@
 {
   "name": "arrovian-atropos",
   "private": true,
-  "version": "0.2.4",
+  "version": "0.2.5",
   "type": "module",
   "description": "Arrovian Atropos PWA — Sperner's Lemma & Arrow's Impossibility Theorem Game",
   "scripts": {
@@ -12,9 +12,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "preview": "vite preview --host",
-    "bump": "node scripts/bump-version.js",
-    "bump:minor": "node scripts/bump-version.js --minor",
-    "bump:major": "node scripts/bump-version.js --major",
+    "bundle": "node concat-source.js",
+    "bump": "node scripts/bump-version.js && npm run bundle",
+    "bump:minor": "node scripts/bump-version.js --minor && npm run bundle",
+    "bump:major": "node scripts/bump-version.js --major && npm run bundle",
     "prepare": "git config core.hooksPath .githooks || true"
   },
   "dependencies": {

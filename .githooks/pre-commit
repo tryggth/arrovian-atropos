@@ -5,4 +5,5 @@ if [ "$SKIP_VERSION_BUMP" = "1" ]; then
 fi
 
 node scripts/bump-version.js
-git add package.json public/version.json
+node concat-source.js
+git add package.json public/version.json combined_source_code.txt
