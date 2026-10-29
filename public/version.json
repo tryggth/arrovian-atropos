@@ -1,6 +1,7 @@
 {
   "name": "Arrovian Atropos PWA",
-  "version": "v0.2.1",
-  "buildVersion": "arrovian-atropos-v0.2.1-1793304788331",
-  "timestamp": 1793304788331
+  "version": "v0.2.2",
+  "buildVersion": "arrovian-atropos-v0.2.2-5027b89-1793305583962",
+  "commitSha": "5027b89",
+  "timestamp": 1793305583962
 }

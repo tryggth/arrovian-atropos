@@ -110,26 +110,9 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
     });
   });
 
-  describe('3. Single-Voter Shift (k = 1) Locality, Deadlock Jump & Solo vs Duel Modes', () => {
-    it('keeps currentPlayer = 1 in Solo Puzzle mode and alternates 1 <-> 2 in Duel mode', () => {
-      const solo0 = createInitialGameState(6, 'solo-mode-seed', 'solo');
-      expect(solo0.mode).toBe('solo');
-      expect(solo0.currentPlayer).toBe(1);
-
-      const centerId = toVertexId(2, 2, 2);
-      const solo1 = applyMove(solo0, centerId, 0);
-      expect(solo1.status).toBe('playing');
-      expect(solo1.currentPlayer).toBe(1); // Stays Constitutional Architect in Solo mode
-      expect(solo1.turn).toBe(2);
-
-      const duel0 = createInitialGameState(6, 'duel-mode-seed', 'duel');
-      expect(duel0.mode).toBe('duel');
-      const duel1 = applyMove(duel0, centerId, 0);
-      expect(duel1.currentPlayer).toBe(2); // Alternates to Social Choice Skeptic in Duel mode
-    });
-
+  describe('3. Single-Voter Shift (k = 1) Locality & Deadlock Jump', () => {
     it('restricts moves to uncolored interior neighbors of lastMove and triggers Deadlock Jump when surrounded', () => {
-      const state0 = createInitialGameState(6, 'locality-test-seed', 'duel');
+      const state0 = createInitialGameState(6, 'locality-test-seed');
 
       // Turn 1: all 10 interior vertices are legal and isJumpTurn is true
       expect(state0.turn).toBe(1);
@@ -142,7 +125,6 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
 
       if (state1.status === 'playing') {
         expect(state1.turn).toBe(2);
-        expect(state1.currentPlayer).toBe(2);
         expect(state1.lastMove).toBe(centerId);
         expect(state1.isJumpTurn).toBe(false);
 
@@ -187,8 +169,7 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
 
       for (let gameIdx = 0; gameIdx < 100; gameIdx++) {
         const n = gameIdx % 3 === 0 ? 5 : gameIdx % 3 === 1 ? 6 : 7;
-        const mode = gameIdx % 2 === 0 ? 'solo' : 'duel';
-        let state = createInitialGameState(n, `sim-game-${gameIdx}`, mode);
+        let state = createInitialGameState(n, `sim-game-${gameIdx}`);
         const maxPossibleMoves = state.graph.interiorIds.length;
 
         let stepCount = 0;
@@ -206,13 +187,6 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
         // Sperner's Lemma guarantee: Game MUST finish on or before coloring the final interior vertex
         expect(state.status).toBe('finished');
         expect(stepCount).toBeLessThanOrEqual(maxPossibleMoves);
-        expect(state.loser).not.toBeNull();
-        if (mode === 'duel') {
-          expect(state.winner).not.toBeNull();
-          expect(state.winner).not.toBe(state.loser);
-        } else {
-          expect(state.winner).toBeNull();
-        }
         expect(state.losingTriangles.length).toBeGreaterThanOrEqual(1);
 
         // Verify that every reported losing triangle truly has all 3 rulings {0, 1, 2}
@@ -316,16 +290,16 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
     });
   });
 
-  describe('6. Interactive SVG Simplex UI, Solo Puzzle Mode & Arrow Terminology (v0.2.0)', () => {
-    it('renders the v0.2.0 badge, defaults to Solo Puzzle mode, and displays A≻C / B≻A / C≻B without leading numbers', () => {
+  describe('6. Interactive SVG Simplex UI, Constitutional Architect Mode & Arrow Terminology (v0.2.0)', () => {
+    it('renders the v0.2.0 badge, defaults to Constitutional Architect mode, and displays A≻C / B≻A / C≻B without leading numbers', () => {
       render(React.createElement(App));
 
       const badge = screen.getByTestId('version-badge');
       expect(badge.textContent).toBe(DEFAULT_APP_VERSION);
 
-      // Defaults to Solo Puzzle: Constitutional Architect
+      // Defaults to Constitutional Architect
       expect(screen.getByTestId('active-role-badge').textContent).toContain(
-        'Solo Puzzle: Constitutional Architect'
+        'Constitutional Architect'
       );
       expect(screen.getByTestId('solo-survival-progress')).toBeDefined();
 
@@ -355,11 +329,8 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
         screen.getByTestId('vertex-2,2,2').getAttribute('data-colored')
       ).toBe('1');
 
-      // Switch to 2-Player Duel mode
-      fireEvent.click(screen.getByTestId('game-mode-duel'));
-      expect(screen.getByTestId('active-role-badge').textContent).toContain(
-        'Constitutional Architect: Builds Coherent Social Choice Rule'
-      );
+      // Verify 2-Player Duel mode widget is removed
+      expect(screen.queryByTestId('game-mode-duel')).toBeNull();
     });
 
     it('enlarges a profile node on hover and displays A≻C (without 0: prefix) + coordinate text', () => {

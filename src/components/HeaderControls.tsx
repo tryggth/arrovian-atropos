@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Dices, RotateCcw, Eye, Triangle, Sparkles, User, Users } from 'lucide-react';
+import { Dices, RotateCcw, Eye, Triangle, Sparkles } from 'lucide-react';
 import { BOARD_SIZES } from '../engine/barycentric';
-import { GameMode } from '../engine/gameState';
 
 export interface HeaderControlsProps {
   readonly n: number;
   readonly seed: string;
-  readonly mode: GameMode;
   readonly showBadgesOnNodes: boolean;
   readonly appVersion?: string;
   readonly hasUpdate?: boolean;
   readonly latestVersion?: string | null;
   readonly onApplyUpdate?: () => void;
-  readonly onChangeMode: (mode: GameMode) => void;
   readonly onChangeBoardSize: (n: number) => void;
   readonly onChangeSeed: (seed: string) => void;
   readonly onRandomizeSeed: () => void;
@@ -23,13 +20,11 @@ export interface HeaderControlsProps {
 export const HeaderControls: React.FC<HeaderControlsProps> = ({
   n,
   seed,
-  mode,
   showBadgesOnNodes,
   appVersion = 'v0.2.0',
   hasUpdate = false,
   latestVersion = null,
   onApplyUpdate,
-  onChangeMode,
   onChangeBoardSize,
   onChangeSeed,
   onRandomizeSeed,
@@ -95,41 +90,6 @@ export const HeaderControls: React.FC<HeaderControlsProps> = ({
             </button>
           )}
 
-          {/* Mode Toggle: Solo Puzzle (Default) vs 2-Player Duel */}
-          <div
-            role="group"
-            aria-label="Constitutional Game Mode"
-            className="flex items-center rounded-lg border border-slate-800 bg-slate-900/90 p-0.5 text-xs"
-          >
-            <button
-              type="button"
-              data-testid="game-mode-solo"
-              onClick={() => onChangeMode('solo')}
-              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-semibold transition-colors ${
-                mode === 'solo'
-                  ? 'bg-sky-500/20 text-sky-200 border border-sky-500/40'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-              title="Solo Constitutional Puzzle: Adjudicate as many divided electorate profiles as possible before Arrow's Impossibility Theorem traps you"
-            >
-              <User className="h-3.5 w-3.5" />
-              <span>Solo Puzzle (Architect)</span>
-            </button>
-            <button
-              type="button"
-              data-testid="game-mode-duel"
-              onClick={() => onChangeMode('duel')}
-              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-semibold transition-colors ${
-                mode === 'duel'
-                  ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-              title="2-Player Adversarial Duel: Constitutional Architect vs. Social Choice Skeptic"
-            >
-              <Users className="h-3.5 w-3.5" />
-              <span>2-Player Duel</span>
-            </button>
-          </div>
 
           {/* Electorate Size Selector (n) */}
           <label className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/90 px-3 py-1.5 text-xs text-slate-300">

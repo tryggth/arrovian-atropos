@@ -10,13 +10,11 @@
 
 **Arrovian Atropos** is an interactive, offline-capable Progressive Web App (PWA) that unifies **Burke & Teng's (2008) combinatorial game *Atropos*** with **Tanaka's / Sperner's topological proof of Arrow's Impossibility Theorem**.
 
-### 1.1 Why a Solo Puzzle Mode + Optional 2-Player / Skeptic Mode?
+### 1.1 The Constitutional Architect's Dilemma (Solo Constitutional Puzzle)
 - **The Core Arrovian Insight**: By Arrow's Impossibility Theorem (and Sperner's Lemma), if a **single Constitutional Architect** tries to adjudicate every divided preference profile on the board while respecting **Unanimity (Pareto)** on the boundary and **Independence of Irrelevant Alternatives (IIA)** locally, **it is mathematically impossible to complete the constitution without creating an intransitive Condorcet cycle / unmasking a Pivotal Dictator**.
-- **Primary Mode — Solo Puzzle Mode ("The Constitutional Architect's Dilemma")**:
-  - The user acts as a single **Constitutional Architect** stepping from profile to profile via **Single-Voter Shifts ($k=1$)**, trying to adjudicate as many divided preference profiles as possible without triggering a Condorcet Paradox or unmasking a Hidden Dictator.
+- **Gameplay ("The Constitutional Architect's Dilemma")**:
+  - The user acts as the **Constitutional Architect** stepping from profile to profile via **Single-Voter Shifts ($k=1$)**, trying to adjudicate as many divided preference profiles as possible without triggering a Condorcet Paradox or unmasking a Hidden Dictator.
   - Because Arrow's Theorem guarantees the puzzle has **no complete solution** (0% survival rate at 100% completion), the player experiences Arrow's Impossibility Theorem firsthand as safe rulings narrow down until a final profile forces a Dictator/Paradox under all 3 choices.
-- **Secondary Mode — "Duel: Architect vs. Skeptic"**:
-  - Because completion without a paradox is impossible, two players (or 1 Player vs. Skeptic AI in `v0.3.0`) can also play the adversarial impartial game where each turn forces the *other* agent into the inescapable Arrovian trap.
 
 ---
 

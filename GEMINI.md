@@ -35,9 +35,8 @@
      - Bottom-Right tip $((1, 0, n-1), (0, 1, n-1)) \in \{(2, 2), (2, 1), (0, 2)\}$ (excludes $(0, 1)$).
      - Guarantees **zero** Arrovian Paradox Triads $\{0, 1, 2\}$ exist at Turn 0.
 
-4. **Game Modes, Locality ($k = 1$ Single-Voter Shift + Deadlock Jump) & Termination**:
-   - **Default Mode — Solo Constitutional Puzzle (`'solo'`)**: A single *Constitutional Architect* adjudicates Divided Electorate Profiles step-by-step via Single-Voter Shifts ($k=1$ + Deadlock Jump), maximizing `Adjudicated Profiles / Total Divided Profiles` before Arrow's Impossibility Theorem inevitably traps the constitution.
-   - **Secondary Mode — 2-Player Duel (`'duel'`)**: *Constitutional Architect* (Player 1) and *Social Choice Skeptic* (Player 2) alternate turns.
+4. **Constitutional Architect Mode, Locality ($k = 1$ Single-Voter Shift + Deadlock Jump) & Termination**:
+   - **Solo Constitutional Architect Puzzle**: A single *Constitutional Architect* adjudicates Divided Electorate Profiles step-by-step via Single-Voter Shifts ($k=1$ + Deadlock Jump), maximizing `Adjudicated Profiles / Total Divided Profiles` before Arrow's Impossibility Theorem inevitably traps the constitution.
    - **Arrovian Paradox Triad Termination**: Immediately after adjudicating a profile $v$, if any incident Voter-Shift Triad has all three rulings $\{A \succ C, B \succ A, C \succ B\}$, the constitution collapses into an intransitive Condorcet cycle $A \succ C \succ B \succ A$ and unmasks a Pivotal Dictator Voter $d \in \{1 \dots n\}$.
 
 ---

@@ -7,10 +7,9 @@ import {
 } from './engine/barycentric';
 import {
   applyMove,
+  CONSTITUTIONAL_ARCHITECT,
   createInitialGameState,
-  GameMode,
   GameState,
-  PLAYERS,
 } from './engine/gameState';
 import { evaluateAllRulingsAtVertex } from './engine/arrowProof';
 import { generateRandomSeed } from './engine/prng';
@@ -27,9 +26,8 @@ export const App: React.FC = () => {
 
   const [boardSize, setBoardSize] = useState<number>(DEFAULT_BOARD_SIZE);
   const [seed, setSeed] = useState<string>('arrow-1951');
-  const [gameMode, setGameMode] = useState<GameMode>('solo');
   const [gameState, setGameState] = useState<GameState>(() =>
-    createInitialGameState(DEFAULT_BOARD_SIZE, 'arrow-1951', 'solo')
+    createInitialGameState(DEFAULT_BOARD_SIZE, 'arrow-1951')
   );
 
   const [selectedVertexId, setSelectedVertexId] = useState<VertexId | null>(
@@ -43,15 +41,14 @@ export const App: React.FC = () => {
     useState<boolean>(true);
 
   const startNewGame = useCallback(
-    (newN: number, newSeed: string, newMode: GameMode = gameMode) => {
+    (newN: number, newSeed: string) => {
       setBoardSize(newN);
       setSeed(newSeed);
-      setGameMode(newMode);
-      setGameState(createInitialGameState(newN, newSeed, newMode));
+      setGameState(createInitialGameState(newN, newSeed));
       setSelectedVertexId(null);
       setHoveredVertexId(null);
     },
-    [gameMode]
+    []
   );
 
   const handleCommitMove = useCallback(
@@ -108,7 +105,6 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [selectedVertexId, gameState.status, handleCommitMove]);
 
-  const activePlayerMeta = PLAYERS[gameState.currentPlayer];
   const inspectedId =
     hoveredVertexId ?? selectedVertexId ?? gameState.lastMove;
   const inspectedVertex = inspectedId
@@ -140,19 +136,17 @@ export const App: React.FC = () => {
       <HeaderControls
         n={boardSize}
         seed={seed}
-        mode={gameMode}
         showBadgesOnNodes={showBadgesOnNodes}
         appVersion={appVersion}
         hasUpdate={hasUpdate}
         latestVersion={latestVersion}
         onApplyUpdate={applyUpdate}
-        onChangeMode={(nextMode) => startNewGame(boardSize, seed, nextMode)}
-        onChangeBoardSize={(nextN) => startNewGame(nextN, seed, gameMode)}
-        onChangeSeed={(nextSeed) => startNewGame(boardSize, nextSeed, gameMode)}
+        onChangeBoardSize={(nextN) => startNewGame(nextN, seed)}
+        onChangeSeed={(nextSeed) => startNewGame(boardSize, nextSeed)}
         onRandomizeSeed={() =>
-          startNewGame(boardSize, generateRandomSeed(), gameMode)
+          startNewGame(boardSize, generateRandomSeed())
         }
-        onResetBoard={() => startNewGame(boardSize, seed, gameMode)}
+        onResetBoard={() => startNewGame(boardSize, seed)}
         onToggleBadges={() => setShowBadgesOnNodes((prev) => !prev)}
       />
 
@@ -166,11 +160,9 @@ export const App: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <span
                     data-testid="active-role-badge"
-                    className={`inline-flex items-center rounded-xl border px-3 py-1 font-mono text-xs font-bold ${activePlayerMeta.badgeClass}`}
+                    className={`inline-flex items-center rounded-xl border px-3 py-1 font-mono text-xs font-bold ${CONSTITUTIONAL_ARCHITECT.badgeClass}`}
                   >
-                    {gameMode === 'solo'
-                      ? 'Solo Puzzle: Constitutional Architect'
-                      : `${activePlayerMeta.title}: ${activePlayerMeta.role}`}
+                    Constitutional Architect: {CONSTITUTIONAL_ARCHITECT.role}
                   </span>
                   <div>
                     <div className="text-sm font-semibold text-slate-100">
@@ -220,37 +212,35 @@ export const App: React.FC = () => {
                 </div>
               </div>
 
-              {/* Solo Constitutional Puzzle Survival Progress Bar */}
-              {gameMode === 'solo' && (
-                <div
-                  data-testid="solo-survival-progress"
-                  className="flex flex-col gap-1 border-t border-slate-800/80 pt-2"
-                >
-                  <div className="flex items-center justify-between font-mono text-[11px]">
-                    <span className="text-slate-300">
-                      Constitutional Coherence Progress:{' '}
-                      <strong className="text-sky-300">
-                        {adjudicatedProfiles} / {totalDividedProfiles}
-                      </strong>{' '}
-                      Divided Profiles Adjudicated ({progressPct}%)
-                    </span>
-                    <span className="text-slate-400">
-                      {remainingOpenProfiles} Open Profiles Remaining
-                    </span>
-                  </div>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
-                    <div
-                      className="h-full bg-gradient-to-r from-sky-400 to-indigo-400 transition-all"
-                      style={{ width: `${progressPct}%` }}
-                    />
-                  </div>
+              {/* Constitutional Coherence Progress Bar */}
+              <div
+                data-testid="solo-survival-progress"
+                className="flex flex-col gap-1 border-t border-slate-800/80 pt-2"
+              >
+                <div className="flex items-center justify-between font-mono text-[11px]">
+                  <span className="text-slate-300">
+                    Constitutional Coherence Progress:{' '}
+                    <strong className="text-sky-300">
+                      {adjudicatedProfiles} / {totalDividedProfiles}
+                    </strong>{' '}
+                    Divided Profiles Adjudicated ({progressPct}%)
+                  </span>
+                  <span className="text-slate-400">
+                    {remainingOpenProfiles} Open Profiles Remaining
+                  </span>
                 </div>
-              )}
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
+                  <div
+                    className="h-full bg-gradient-to-r from-sky-400 to-indigo-400 transition-all"
+                    style={{ width: `${progressPct}%` }}
+                  />
+                </div>
+              </div>
             </div>
           ) : (
             <DictatorModal
               gameState={gameState}
-              onPlayAgain={() => startNewGame(boardSize, seed, gameMode)}
+              onPlayAgain={() => startNewGame(boardSize, seed)}
             />
           )}
 
@@ -396,15 +386,6 @@ export const App: React.FC = () => {
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-slate-500">#{m.turn}</span>
-                        {gameMode === 'duel' && (
-                          <span
-                            className={
-                              m.player === 1 ? 'text-sky-300' : 'text-amber-300'
-                            }
-                          >
-                            {m.player === 1 ? 'Arch' : 'Skep'}
-                          </span>
-                        )}
                         <span className="text-slate-200">
                           ({m.coord.join(',')})
                         </span>
