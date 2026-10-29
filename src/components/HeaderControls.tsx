@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Dices, RotateCcw, Eye, Triangle, Sparkles } from 'lucide-react';
+import { Dices, RotateCcw, Eye, Triangle, Sparkles, Radar } from 'lucide-react';
 import { BOARD_SIZES } from '../engine/barycentric';
 
 export interface HeaderControlsProps {
   readonly n: number;
   readonly seed: string;
   readonly showBadgesOnNodes: boolean;
+  readonly showPossibleDictators: boolean;
+  readonly possibleDictatorCount: number;
+  readonly onTogglePossibleDictators: () => void;
   readonly appVersion?: string;
   readonly hasUpdate?: boolean;
   readonly latestVersion?: string | null;
@@ -21,6 +24,9 @@ export const HeaderControls: React.FC<HeaderControlsProps> = ({
   n,
   seed,
   showBadgesOnNodes,
+  showPossibleDictators,
+  possibleDictatorCount,
+  onTogglePossibleDictators,
   appVersion = 'v0.2.0',
   hasUpdate = false,
   latestVersion = null,
@@ -157,6 +163,22 @@ export const HeaderControls: React.FC<HeaderControlsProps> = ({
           >
             <Eye className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Profile Rulings</span>
+          </button>
+
+          {/* Live Possible Dictators Radar Toggle */}
+          <button
+            type="button"
+            data-testid="toggle-possible-dictators"
+            onClick={onTogglePossibleDictators}
+            title="Toggle Possible Dictators Radar across the simplex board and sidebar"
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+              showPossibleDictators
+                ? 'border-amber-500/50 bg-amber-500/20 text-amber-200 shadow-sm'
+                : 'border-slate-800 bg-slate-900/90 text-slate-300 hover:border-slate-700 hover:text-slate-100'
+            }`}
+          >
+            <Radar className="h-3.5 w-3.5 text-amber-400" />
+            <span>Possible Dictators ({possibleDictatorCount}/{n})</span>
           </button>
 
           {/* Reset Current Constitution */}

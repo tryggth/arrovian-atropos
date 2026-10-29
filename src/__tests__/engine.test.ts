@@ -18,12 +18,14 @@ import {
   createInitialGameState,
 } from '../engine/gameState';
 import {
+  analyzePossibleDictators,
   classifyPowerDynamics,
   computePairwiseTallies,
   computePivotalVoterIndex,
   evaluateAllRulingsAtVertex,
   evaluateRulingImplication,
   extractParadoxTriadProof,
+  getTriadPivotalVoter,
 } from '../engine/arrowProof';
 import { createSeededRNG } from '../engine/prng';
 
@@ -288,6 +290,85 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       expect(imp0At411.powerClassification).toBe('Majority Rule');
       expect(imp0At411.splitLabel).toBe('4 vs 2');
     });
+
+    it('analyzes Possible Dictators at Turn 0: n voter summaries, n^2 total triads, armed vs eliminated boundary triads', () => {
+      const n = 6;
+      const graph = createLatticeGraph(n);
+      const colors = generateBoundaryColoring(graph, 'arrow-1951');
+      const analysis = analyzePossibleDictators(graph, colors);
+
+      expect(analysis.voterSummaries.length).toBe(n);
+
+      // Verify each voter d has 1 <= d <= n
+      analysis.voterSummaries.forEach((summary, idx) => {
+        expect(summary.voterId).toBe(idx + 1);
+      });
+
+      // Total triads across all voters equals n^2 (36 for n=6)
+      const sumTriads = analysis.voterSummaries.reduce(
+        (sum, v) => sum + v.totalTriads,
+        0
+      );
+      expect(sumTriads).toBe(n * n);
+
+      // In the initial state, boundary edges have pre-colored pairs:
+      // boundary-adjacent triads with 2 distinct boundary colors are 'armed'
+      // boundary triads where both boundary vertices share the same color are 'eliminated'
+      const armedTriads = Array.from(analysis.triadStates.values()).filter(
+        (t) => t.status === 'armed'
+      );
+      const eliminatedTriads = Array.from(analysis.triadStates.values()).filter(
+        (t) => t.status === 'eliminated'
+      );
+      expect(armedTriads.length).toBeGreaterThan(0);
+      expect(eliminatedTriads.length).toBeGreaterThan(0);
+
+      // For every armed triad at Turn 0, openVertexId is in the interior and missingRuling is valid
+      for (const armed of armedTriads) {
+        expect(armed.openVertexId).not.toBeNull();
+        expect(armed.missingRuling).not.toBeNull();
+        expect(graph.interiorIds).toContain(armed.openVertexId!);
+      }
+    });
+
+    it('marks an interior triad armed when 2 vertices are colored with distinct rulings and updates vertexThreats', () => {
+      const graph = createLatticeGraph(6);
+      const colors = generateBoundaryColoring(graph, 'arrow-1951');
+
+      // Consider an interior triad: e.g. (3, 2, 1), (2, 3, 1), (2, 2, 2)
+      // (3,2,1) and (2,3,1) colored with 0 (A>C) and 1 (B>A)
+      const vA = toVertexId(3, 2, 1);
+      const vB = toVertexId(2, 3, 1);
+      const vOpen = toVertexId(2, 2, 2);
+
+      colors.set(vA, 0);
+      colors.set(vB, 1);
+
+      const analysis = analyzePossibleDictators(graph, colors);
+
+      // Find the triad containing vA, vB, vOpen
+      const targetTri = graph.triangles.find(
+        (t) =>
+          t.vertices.includes(vA) &&
+          t.vertices.includes(vB) &&
+          t.vertices.includes(vOpen)
+      )!;
+      expect(targetTri).toBeDefined();
+
+      const tState = analysis.triadStates.get(targetTri.id)!;
+      expect(tState).toBeDefined();
+      expect(tState.status).toBe('armed');
+      expect(tState.openVertexId).toBe(vOpen);
+      expect(tState.missingRuling).toBe(2);
+      expect(tState.pivotalVoterId).toBe(getTriadPivotalVoter(graph, targetTri));
+      expect(tState.pivotalVoterId).toBe(3); // max(3, 2, 2) = 3
+
+      // Check vertexThreats at vOpen
+      const threat = analysis.vertexThreats.get(vOpen);
+      expect(threat).toBeDefined();
+      expect(threat?.safeRulings).not.toContain(2);
+      expect(threat?.lethalRulings.get(2)).toContain(3);
+    });
   });
 
   describe('6. Interactive SVG Simplex UI, Constitutional Architect Mode & Arrow Terminology (v0.2.0)', () => {
@@ -393,6 +474,36 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       });
 
       fetchSpy.mockRestore();
+    });
+
+    it('toggles the Possible Dictators radar panel and displays rows for Voters #1 through #6', () => {
+      render(React.createElement(App));
+
+      // Initially, possible-dictators-panel is not rendered in the sidebar
+      expect(screen.queryByTestId('possible-dictators-panel')).toBeNull();
+
+      const toggleBtn = screen.getByTestId('toggle-possible-dictators');
+      expect(toggleBtn).toBeDefined();
+      expect(toggleBtn.textContent).toContain('Possible Dictators');
+
+      // Click toggle
+      fireEvent.click(toggleBtn);
+
+      // Panel is now visible
+      const panel = screen.getByTestId('possible-dictators-panel');
+      expect(panel).toBeDefined();
+      expect(panel.textContent).toContain('Possible Dictators Radar');
+
+      // Rows for Voters #1 through #6 are rendered
+      for (let voterId = 1; voterId <= 6; voterId++) {
+        const row = screen.getByTestId(`dictator-voter-row-${voterId}`);
+        expect(row).toBeDefined();
+        expect(row.textContent).toContain(`Voter #${voterId}`);
+      }
+
+      // Clicking again hides the panel
+      fireEvent.click(toggleBtn);
+      expect(screen.queryByTestId('possible-dictators-panel')).toBeNull();
     });
   });
 });

@@ -11,13 +11,17 @@ import {
   createInitialGameState,
   GameState,
 } from './engine/gameState';
-import { evaluateAllRulingsAtVertex } from './engine/arrowProof';
+import {
+  analyzePossibleDictators,
+  evaluateAllRulingsAtVertex,
+} from './engine/arrowProof';
 import { generateRandomSeed } from './engine/prng';
 import { useAppUpdate } from './hooks/useAppUpdate';
 import { HeaderControls } from './components/HeaderControls';
 import { LatticeBoard } from './components/LatticeBoard';
 import { ColorPicker } from './components/ColorPicker';
 import { InspectorPanel } from './components/InspectorPanel';
+import { PossibleDictatorsPanel } from './components/PossibleDictatorsPanel';
 import { DictatorModal } from './components/DictatorModal';
 import { Compass, Footprints, ScrollText, ShieldAlert } from 'lucide-react';
 
@@ -39,6 +43,16 @@ export const App: React.FC = () => {
   const [showBadgesOnNodes, setShowBadgesOnNodes] = useState<boolean>(true);
   const [showImpossibilityWarnings, setShowImpossibilityWarnings] =
     useState<boolean>(true);
+  const [showPossibleDictators, setShowPossibleDictators] =
+    useState<boolean>(false);
+  const [hoveredDictatorId, setHoveredDictatorId] = useState<number | null>(
+    null
+  );
+
+  const dictatorAnalysis = useMemo(
+    () => analyzePossibleDictators(gameState.graph, gameState.colors),
+    [gameState.graph, gameState.colors]
+  );
 
   const startNewGame = useCallback(
     (newN: number, newSeed: string) => {
@@ -137,6 +151,9 @@ export const App: React.FC = () => {
         n={boardSize}
         seed={seed}
         showBadgesOnNodes={showBadgesOnNodes}
+        showPossibleDictators={showPossibleDictators}
+        possibleDictatorCount={dictatorAnalysis.activeCandidateVoterIds.length}
+        onTogglePossibleDictators={() => setShowPossibleDictators((prev) => !prev)}
         appVersion={appVersion}
         hasUpdate={hasUpdate}
         latestVersion={latestVersion}
@@ -253,6 +270,9 @@ export const App: React.FC = () => {
             quickPlaceMode={quickPlaceMode}
             showBadgesOnNodes={showBadgesOnNodes}
             showImpossibilityWarnings={showImpossibilityWarnings}
+            showPossibleDictators={showPossibleDictators}
+            dictatorAnalysis={dictatorAnalysis}
+            hoveredDictatorId={hoveredDictatorId}
             onSelectVertex={handleSelectVertex}
             onHoverVertex={setHoveredVertexId}
             onPickRadialColor={(vId, color) => {
@@ -293,6 +313,18 @@ export const App: React.FC = () => {
 
         {/* Right Sidebar: Electorate Profile Inspector, Axioms & Constitutional Precedent Log */}
         <aside className="flex flex-col gap-4 lg:col-span-4">
+          {/* Possible Dictators Radar Sidebar Panel */}
+          {showPossibleDictators && (
+            <PossibleDictatorsPanel
+              n={boardSize}
+              analysis={dictatorAnalysis}
+              hoveredDictatorId={hoveredDictatorId}
+              onHoverDictator={setHoveredDictatorId}
+              onSelectTriggerVertex={handleSelectVertex}
+              legalMoves={gameState.legalMoves}
+            />
+          )}
+
           {/* Electorate Profile & Pairwise Tally Inspector */}
           <InspectorPanel
             n={boardSize}

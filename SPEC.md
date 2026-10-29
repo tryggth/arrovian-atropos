@@ -1,6 +1,6 @@
 # SPEC: Arrovian Atropos PWA (Progressive Web App)
 
-- **Document Version**: `0.2.1`
+- **Document Version**: `0.2.2`
 - **Target Agent**: `agy` (Google Antigravity CLI)
 - **Source of Truth Notebook**: `Hidden Dictator Game` (`notebooks/2b675003-edce-43bf-91cd-5d0ee2c33f77`)
 
@@ -68,14 +68,38 @@ For the selected (or hovered) legal profile $v = (k_0, k_1, k_2)$, evaluate each
 
 ---
 
-## 4. "The Dictator Reveal" Mathematical Post-Mortem (`arrowProof.ts` & `DictatorModal.tsx`)
+## 4. "The Dictator Reveal" & Live "Possible Dictators" Radar (`arrowProof.ts`)
 
-When an Arrovian Paradox Triad $\{v^{(0)}, v^{(1)}, v^{(2)}\}$ is formed (ending the puzzle or duel):
+### 4.1 Post-Mortem When an Arrovian Paradox Triad Is Completed
+When an Arrovian Paradox Triad $\{v^{(0)}, v^{(1)}, v^{(2)}\}$ is formed (ending the puzzle):
 1. **Intransitive Condorcet Cycle Breakdown**:
    - Display the 3 adjacent profiles $v^{(0)}$ (ruled `A ≻ C`), $v^{(1)}$ (ruled `B ≻ A`), and $v^{(2)}$ (ruled `C ≻ B`), showing how a single-voter shift between them traps society in $A \succ C \succ B \succ A$.
 2. **Pivotal Dictator Voter Extraction ($d$)**:
-   - Along the edge between $v^{(0)}$ (`A ≻ C`) and $v^{(1)}$ (`B ≻ A`, where transitivity with $v^{(2)}$'s `C ≻ B` requires `C ≻ A`), only **one single voter** moved between Condorcet blocks:
-   - Identify the exact **Voter Index $d \in \{1, \dots, n\}$** whose individual preference shift reversed the entire society's ranking between $A$ and $C$.
+   - Identify the exact **Voter Index $d = \max_{u \in \tau} k_0(u) \in \{1, \dots, n\}$** whose individual preference shift reversed the entire society's ranking between $A$ and $C$.
+
+### 4.2 Live "Possible Dictators" Toggle & Radar (At Any Stage of Play)
+At any stage before a paradox triad is completed, Sperner's Lemma guarantees that the remaining uncolored interior profiles still harbor at least one unavoidable Pivotal Dictator $d \in \{1, \dots, n\}$.
+- **Header Toggle Button (`Possible Dictators`)**:
+  - A toggle button in `HeaderControls.tsx` (`showPossibleDictators`) that turns on the **Possible Dictators Radar** across the board and sidebar.
+- **Triad & Voter Classification at Any Intermediate State**:
+  - Every Voter-Shift Triad $\tau$ has a canonical associated **Pivotal Voter Index $d(\tau) = \max_{u \in \tau} k_0(u) \in \{1, \dots, n\}$**.
+  - At any board state, each triad $\tau$ is classified into:
+    1. **Eliminated Triad (`'eliminated'`, Safe / Monochrome-Locked)**: $\tau$ already has $\ge 2$ vertices with the *same* ruling, so $\tau$ can *never* become a `{0, 1, 2}` Paradox Triad.
+    2. **Armed Triad (`'armed'`, Imminent Dictator Trap)**: $\tau$ has exactly $2$ adjudicated vertices with *distinct* rulings and $1$ unadjudicated interior vertex. If the open vertex receives the missing 3rd ruling, Voter $d(\tau)$ is immediately unmasked as the Dictator.
+    3. **Latent Triad (`'latent'`, Open)**: $\tau$ has $0$ or $1$ adjudicated vertices; Voter $d(\tau)$ can still be unmasked here in $2+$ moves.
+    4. **Paradox Triad (`'paradox'`)**: All 3 vertices of $\tau$ have distinct rulings `{0, 1, 2}`.
+  - For every unadjudicated interior vertex $v$, compute its **Safe Ruling Set** $S(v) \subseteq \{0, 1, 2\}$:
+    - **Unconstrained ($|S(v)| = 3$)**: All 3 rulings are currently locally transitive.
+    - **Constrained ($|S(v)| \in \{1, 2\}$)**: 1 or 2 rulings immediately unmask a dictator.
+    - **Inevitable Dictator Trap ($|S(v)| = 0$)**: All 3 rulings $\{0, 1, 2\}$ at $v$ complete an Armed Triad!
+- **Visualizing Possible Dictators When Toggled ON**:
+  1. **On `LatticeBoard.tsx`**:
+     - **Eliminated Triads** are dimmed so only viable dictator regions remain prominent.
+     - **Armed Triads** are outlined in dashed amber/rose and display their candidate dictator label `d=#k` at the triad centroid.
+     - **Constrained & Trap Profiles ($|S(v)| < 3$)**: Display color-coded threat pips around the uncolored node showing which rulings are blocked, or a pulsing `TRAP` badge if $|S(v)| = 0$.
+     - Hovering a specific `Voter #d` in the sidebar highlights all viable/armed triads on the lattice belonging to Voter `#d`.
+  2. **In Sidebar (`PossibleDictatorsPanel.tsx`)**:
+     - Displays all $n$ voters (`Voter #1` … `Voter #n`) with their live status badge (`ARMED`, `VIABLE`, `CLEARED`, `UNMASKED`), armed/latent triad counts, and open trigger profiles.
 
 ---
 

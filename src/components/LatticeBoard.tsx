@@ -5,7 +5,10 @@ import {
   RulingColor,
   VertexId,
 } from '../engine/barycentric';
-import { evaluateAllRulingsAtVertex } from '../engine/arrowProof';
+import {
+  evaluateAllRulingsAtVertex,
+  PossibleDictatorsAnalysis,
+} from '../engine/arrowProof';
 import { GameState } from '../engine/gameState';
 
 export interface LatticeBoardProps {
@@ -16,6 +19,9 @@ export interface LatticeBoardProps {
   readonly quickPlaceMode: boolean;
   readonly showBadgesOnNodes: boolean;
   readonly showImpossibilityWarnings?: boolean;
+  readonly showPossibleDictators?: boolean;
+  readonly dictatorAnalysis?: PossibleDictatorsAnalysis | null;
+  readonly hoveredDictatorId?: number | null;
   readonly onSelectVertex: (vertexId: VertexId) => void;
   readonly onHoverVertex: (vertexId: VertexId | null) => void;
   readonly onPickRadialColor: (vertexId: VertexId, color: RulingColor) => void;
@@ -92,6 +98,19 @@ function getTriangleFill(
   };
 }
 
+function getThreatPipOffset(
+  ruling: RulingColor,
+  radius: number
+): { cx: number; cy: number } {
+  if (ruling === 0) {
+    return { cx: 0, cy: -radius };
+  }
+  if (ruling === 1) {
+    return { cx: -radius * 0.866, cy: radius * 0.5 };
+  }
+  return { cx: radius * 0.866, cy: radius * 0.5 };
+}
+
 export const LatticeBoard: React.FC<LatticeBoardProps> = ({
   gameState,
   selectedVertexId,
@@ -100,6 +119,9 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
   quickPlaceMode,
   showBadgesOnNodes,
   showImpossibilityWarnings = true,
+  showPossibleDictators = false,
+  dictatorAnalysis = null,
+  hoveredDictatorId = null,
   onSelectVertex,
   onHoverVertex,
   onPickRadialColor,
@@ -288,7 +310,48 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
             const p2 = projectToSvg(v2.x, v2.y);
 
             const isLosing = losingTriangleIds.has(tri.id);
-            const style = getTriangleFill(tri, colors, isLosing);
+            let style = getTriangleFill(tri, colors, isLosing);
+            let strokeDasharray: string | undefined = undefined;
+
+            const tState =
+              showPossibleDictators && dictatorAnalysis
+                ? dictatorAnalysis.triadStates.get(tri.id)
+                : undefined;
+
+            const isHoveredVoterTriad = Boolean(
+              showPossibleDictators &&
+                dictatorAnalysis &&
+                hoveredDictatorId !== null &&
+                hoveredDictatorId !== undefined &&
+                tState?.pivotalVoterId === hoveredDictatorId &&
+                tState.status !== 'eliminated'
+            );
+
+            if (!isLosing && showPossibleDictators && dictatorAnalysis) {
+              if (isHoveredVoterTriad) {
+                style = {
+                  fill: '#38bdf8',
+                  fillOpacity: 0.28,
+                  stroke: '#38bdf8',
+                  strokeWidth: 2.5,
+                };
+              } else if (tState?.status === 'eliminated') {
+                style = {
+                  ...style,
+                  fillOpacity: 0.04,
+                  stroke: 'transparent',
+                };
+              } else if (tState?.status === 'armed') {
+                style = {
+                  fill: '#f59e0b',
+                  fillOpacity: 0.2,
+                  stroke: '#f59e0b',
+                  strokeWidth: 2,
+                };
+                strokeDasharray = '4 2';
+              }
+            }
+
             const centroid = projectToSvg(tri.centroid.x, tri.centroid.y);
 
             return (
@@ -300,6 +363,7 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
                   fillOpacity={style.fillOpacity}
                   stroke={style.stroke}
                   strokeWidth={style.strokeWidth}
+                  strokeDasharray={strokeDasharray}
                   strokeLinejoin="round"
                 />
                 {isLosing && (
@@ -312,6 +376,24 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
                     CYCLE
                   </text>
                 )}
+                {!isLosing &&
+                  showPossibleDictators &&
+                  tState &&
+                  (tState.status === 'armed' || isHoveredVoterTriad) && (
+                    <text
+                      data-testid={
+                        tState.status === 'armed'
+                          ? `armed-triad-label-${tri.id}`
+                          : undefined
+                      }
+                      x={centroid.x}
+                      y={centroid.y + 3}
+                      textAnchor="middle"
+                      className="pointer-events-none fill-amber-200 font-mono text-[9.5px] font-black"
+                    >
+                      d=#{tState.pivotalVoterId}
+                    </text>
+                  )}
               </g>
             );
           })}
@@ -454,6 +536,64 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
                     fillOpacity={0.75}
                   />
                 )}
+
+                {/* Live Possible Dictators Radar Threat Indicators */}
+                {showPossibleDictators &&
+                  dictatorAnalysis &&
+                  !isColored &&
+                  vertex.isInterior &&
+                  (() => {
+                    const threat = dictatorAnalysis.vertexThreats.get(vertex.id);
+                    if (!threat) return null;
+
+                    if (threat.isInevitableTrap) {
+                      return (
+                        <g>
+                          <circle
+                            r={activeRadius + 6.5}
+                            fill="none"
+                            stroke="#f43f5e"
+                            strokeWidth={2.5}
+                            strokeDasharray="3 2"
+                            className="animate-pulse"
+                          />
+                          <text
+                            data-testid={`trap-badge-${vertex.id}`}
+                            y={-activeRadius - 5}
+                            textAnchor="middle"
+                            className="pointer-events-none fill-rose-300 font-mono text-[8.5px] font-black"
+                          >
+                            TRAP
+                          </text>
+                        </g>
+                      );
+                    }
+
+                    if (threat.isConstrained) {
+                      return (
+                        <g>
+                          {([0, 1, 2] as const).map((r) => {
+                            if (!threat.lethalRulings.has(r)) return null;
+                            const offset = getThreatPipOffset(r, activeRadius);
+                            return (
+                              <circle
+                                key={r}
+                                r={3.2}
+                                cx={offset.cx}
+                                cy={offset.cy}
+                                fill={RULING_COLORS[r].hexFill}
+                                stroke="#090d16"
+                                strokeWidth={1}
+                                data-testid={`threat-pip-${vertex.id}-${r}`}
+                              />
+                            );
+                          })}
+                        </g>
+                      );
+                    }
+
+                    return null;
+                  })()}
 
                 {/* Enlarged Readable Typography when Hovered */}
                 {isHovered ? (
