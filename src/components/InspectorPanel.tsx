@@ -4,7 +4,11 @@ import {
   RULING_COLORS,
   RulingColor,
 } from '../engine/barycentric';
-import { computePairwiseTallies } from '../engine/arrowProof';
+import {
+  computePairwiseTallies,
+  computeVoterBlockPartitions,
+  SWF_OUTPUT_CONSTRAINTS,
+} from '../engine/arrowProof';
 import { Info, Scale } from 'lucide-react';
 
 export interface InspectorPanelProps {
@@ -22,6 +26,9 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
 }) => {
   const tallies = inspectedVertex
     ? computePairwiseTallies(inspectedVertex.coord)
+    : null;
+  const partitions = inspectedVertex
+    ? computeVoterBlockPartitions(inspectedVertex.coord)
     : null;
 
   const getProfileTypeLabel = (v: LatticeVertex): string => {
@@ -43,14 +50,14 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
       <div className="mb-2.5 flex items-center justify-between">
         <h3 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-300">
           <Info className="h-3.5 w-3.5 text-indigo-400" />
-          <span>Electorate Profile &amp; Pairwise Tally Inspector</span>
+          <span>Electorate Profile &amp; SWF Constraint Inspector</span>
         </h3>
         <span className="font-mono text-xs text-slate-400">
           n = {n} ({totalProfiles} profiles)
         </span>
       </div>
 
-      {inspectedVertex && tallies ? (
+      {inspectedVertex && tallies && partitions ? (
         <div className="space-y-3 text-xs">
           {/* Profile Coordinate & Adjudication Status */}
           <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/80 px-3 py-2">
@@ -80,25 +87,49 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
 
           {/* 3 Condorcet Voter Coalition Blocks */}
           <div className="grid grid-cols-3 gap-2 font-mono text-[11px]">
-            <div className="rounded-lg border border-slate-800/90 bg-slate-950/60 p-2">
-              <div className="font-bold text-rose-400">
-                G₀: k₀ = {inspectedVertex.coord[0]}
+            {partitions.map((p) => (
+              <div
+                key={p.blockIndex}
+                data-testid={`voter-block-range-${p.blockIndex}`}
+                className="rounded-lg border border-slate-800/90 bg-slate-950/60 p-2"
+              >
+                <div
+                  className={`font-bold ${
+                    p.blockIndex === 0
+                      ? 'text-rose-400'
+                      : p.blockIndex === 1
+                        ? 'text-emerald-400'
+                        : 'text-indigo-400'
+                  }`}
+                >
+                  {p.blockLabel}: k_{p.blockIndex} = {p.count}
+                </div>
+                <div className="text-[10px] font-semibold text-slate-200">
+                  Voters {p.rangeLabel}
+                </div>
+                <div className="text-[10px] text-slate-400">{p.ranking}</div>
               </div>
-              <div className="text-slate-400">A ≻ B ≻ C</div>
-            </div>
-            <div className="rounded-lg border border-slate-800/90 bg-slate-950/60 p-2">
-              <div className="font-bold text-emerald-400">
-                G₁: k₁ = {inspectedVertex.coord[1]}
-              </div>
-              <div className="text-slate-400">B ≻ C ≻ A</div>
-            </div>
-            <div className="rounded-lg border border-slate-800/90 bg-slate-950/60 p-2">
-              <div className="font-bold text-indigo-400">
-                G₂: k₂ = {inspectedVertex.coord[2]}
-              </div>
-              <div className="text-slate-400">C ≻ A ≻ B</div>
-            </div>
+            ))}
           </div>
+
+          {/* Active SWF & IIA Decisive Coalition Constraint */}
+          {inspectedColor !== undefined && (
+            <div
+              data-testid="inspector-active-swf-constraint"
+              className="space-y-1 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-2 font-mono text-[11px]"
+            >
+              <div className="font-bold text-indigo-200">
+                {SWF_OUTPUT_CONSTRAINTS[inspectedColor].outputSet}
+              </div>
+              <div className="text-[10px] text-indigo-300">
+                {SWF_OUTPUT_CONSTRAINTS[inspectedColor].tanakaSet}
+              </div>
+              <div className="text-[10px] text-slate-300">
+                Forces {SWF_OUTPUT_CONSTRAINTS[inspectedColor].decisivePair} → d ∈{' '}
+                {partitions[inspectedColor].rangeLabel}
+              </div>
+            </div>
+          )}
 
           {/* Pairwise Vote Tally Bars (A vs B, B vs C, C vs A) */}
           <div className="space-y-2 rounded-xl border border-slate-800/90 bg-slate-950/60 p-2.5">

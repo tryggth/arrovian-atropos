@@ -22,9 +22,11 @@ import {
   classifyPowerDynamics,
   computePairwiseTallies,
   computePivotalVoterIndex,
+  computeVoterBlockPartitions,
   evaluateAllRulingsAtVertex,
   evaluateRulingImplication,
   extractParadoxTriadProof,
+  formatVoterRange,
   getTriadPivotalVoter,
 } from '../engine/arrowProof';
 import { createSeededRNG } from '../engine/prng';
@@ -291,6 +293,37 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       expect(imp0At411.splitLabel).toBe('4 vs 2');
     });
 
+    it('computes Voter-ID block partitions and explicit algebraic SWF constraints', () => {
+      expect(formatVoterRange(1, 0)).toBe('∅');
+      expect(formatVoterRange(1, 1)).toBe('{#1}');
+      expect(formatVoterRange(2, 2)).toBe('{#2, #3}');
+      expect(formatVoterRange(4, 3)).toBe('{#4..#6}');
+
+      const partitions = computeVoterBlockPartitions([1, 2, 3]);
+      expect(partitions[0].blockLabel).toBe('G₀');
+      expect(partitions[0].rangeLabel).toBe('{#1}');
+      expect(partitions[1].blockLabel).toBe('G₁');
+      expect(partitions[1].rangeLabel).toBe('{#2, #3}');
+      expect(partitions[2].blockLabel).toBe('G₂');
+      expect(partitions[2].rangeLabel).toBe('{#4..#6}');
+
+      const graph = createLatticeGraph(6);
+      const colors = generateBoundaryColoring(graph, 'arrow-1951');
+      const imp0At411 = evaluateRulingImplication(
+        graph,
+        colors,
+        toVertexId(4, 1, 1),
+        0
+      );
+      expect(imp0At411.voterRangeLabel).toBe('{#1..#4}');
+      expect(imp0At411.swfOutputConstraint).toBe(
+        'F(P) ∈ {A≻B≻C, A≻C≻B, B≻A≻C}'
+      );
+      expect(imp0At411.decisiveCoalitionFormula).toBe(
+        'Forces D_G₀(A,C) → d ∈ {#1..#4}'
+      );
+    });
+
     it('analyzes Possible Dictators at Turn 0: n voter summaries, n^2 total triads, armed vs eliminated boundary triads', () => {
       const n = 6;
       const graph = createLatticeGraph(n);
@@ -398,6 +431,15 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       expect(screen.getByTestId('ruling-implication-1').textContent).toContain(
         'Minority Override'
       );
+      expect(
+        screen.getByTestId('swf-output-constraint-1').textContent
+      ).toBe('F(P) ∈ {B≻C≻A, C≻B≻A, B≻A≻C}');
+      expect(
+        screen.getByTestId('swf-decisive-constraint-1').textContent
+      ).toBe('Forces D_G₁(B,A) → d ∈ {#3, #4}');
+      expect(
+        screen.getByTestId('voter-block-range-0').textContent
+      ).toContain('{#1, #2}');
 
       // Pairwise tally bars should be rendered in InspectorPanel
       expect(screen.getByTestId('pairwise-tally-A-vs-B')).toBeDefined();
@@ -409,6 +451,25 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       expect(
         screen.getByTestId('vertex-2,2,2').getAttribute('data-colored')
       ).toBe('1');
+
+      // Active SWF constraint box is visible in InspectorPanel
+      const activeConstraint = screen.getByTestId(
+        'inspector-active-swf-constraint'
+      );
+      expect(activeConstraint).toBeDefined();
+      expect(activeConstraint.textContent).toContain('d ∈ {#3, #4}');
+
+      // Verify boundary-seed-button generates a new border seed and resets vertex-2,2,2 back to 'uncolored' at Step 1
+      const seedBtn = screen.getByTestId('boundary-seed-button');
+      const prevSeedText = seedBtn.textContent;
+      fireEvent.click(seedBtn);
+      expect(seedBtn.textContent).not.toBe(prevSeedText);
+      expect(
+        screen.getByTestId('vertex-2,2,2').getAttribute('data-colored')
+      ).toBe('uncolored');
+      expect(screen.getByTestId('locality-status-badge').textContent).toContain(
+        'Step 1'
+      );
 
       // Verify 2-Player Duel mode widget is removed
       expect(screen.queryByTestId('game-mode-duel')).toBeNull();

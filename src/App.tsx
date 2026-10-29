@@ -159,7 +159,6 @@ export const App: React.FC = () => {
         latestVersion={latestVersion}
         onApplyUpdate={applyUpdate}
         onChangeBoardSize={(nextN) => startNewGame(nextN, seed)}
-        onChangeSeed={(nextSeed) => startNewGame(boardSize, nextSeed)}
         onRandomizeSeed={() =>
           startNewGame(boardSize, generateRandomSeed())
         }
@@ -396,7 +395,7 @@ export const App: React.FC = () => {
                 </span>
               </h3>
               <span className="font-mono text-[11px] text-slate-400">
-                Constitution Seed: {seed}
+                Border Seed: {seed}
               </span>
             </div>
 

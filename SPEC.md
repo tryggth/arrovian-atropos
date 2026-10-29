@@ -1,6 +1,6 @@
 # SPEC: Arrovian Atropos PWA (Progressive Web App)
 
-- **Document Version**: `0.2.2`
+- **Document Version**: `0.2.3`
 - **Target Agent**: `agy` (Google Antigravity CLI)
 - **Source of Truth Notebook**: `Hidden Dictator Game` (`notebooks/2b675003-edce-43bf-91cd-5d0ee2c33f77`)
 
@@ -25,7 +25,7 @@ All UI copy, badges, tooltips, radial popovers, and panels MUST use **Social Cho
 | Legacy / Graph Term | Mandatory Arrow's Theorem UI Term |
 | :--- | :--- |
 | `Voters (n)` / `playable nodes` | **Electorate ($n$ Voters)** · **Open Preference Profiles** |
-| `Seed` | **Constitution Seed** (Pre-colored Unanimity Boundary) |
+| `Seed` | **Boundary Seed** (Click to Randomize Border & Restart) |
 | `Node` / `Vertex (k₀, k₁, k₂)` | **Preference Profile $(k_0, k_1, k_2)$** |
 | `Interior Node` / `Uncolored` | **Divided Electorate Profile** · **Unadjudicated** |
 | `Boundary Node (kᵢ = 0)` | **Pareto Boundary Profile** (One voter block absent; unanimous pair) |
@@ -38,30 +38,52 @@ All UI copy, badges, tooltips, radial popovers, and panels MUST use **Social Cho
 | `Elementary Triangle (\Delta / \nabla)` | **Voter-Shift Triad** (3 profiles differing by 1 voter) |
 | `Rainbow Triangle {0, 1, 2}` | **Arrovian Paradox Triad** ($A \succ C \succ B \succ A$ Cycle & Pivotal Dictator) |
 | `Move Log` | **Constitutional Precedent Log** |
-| `Simplex Vertex Telemetry` | **Electorate Profile & Pairwise Tally Inspector** |
+| `Simplex Vertex Telemetry` | **Electorate Profile & SWF Constraint Inspector** |
+
+### 2.1 One-Click Boundary Seed Button (Randomize Border & Restart)
+- The **Seed** determines the deterministic pseudo-random pre-coloring of the outer Unanimity/Pareto boundary edges.
+- In `HeaderControls.tsx`, the **Seed** control is a **single-click interactive button** (`🎲 Border Seed: {seed} · New Border`):
+  - Clicking anywhere on the Seed button immediately generates a fresh random seed, randomizes the Unanimity boundary pre-coloring, and restarts the game at Step 1.
+  - The separate **Reset** button restarts the current game from Step 1 while keeping the *same* boundary seed.
 
 ---
 
-## 3. Arrovian Selection Implications on Radial Popover & Ruling Palette (`v0.2.0` Core Feature)
+## 3. Arrovian Selection Implications & Algebraic Constraints on $F$
 
-When a user clicks an unadjudicated profile $v = (k_0, k_1, k_2)$, the **Radial Selection Popover** on the lattice board and the **Constitutional Ruling Chambers** below the board dynamically compute and display the **exact Arrovian implications** of choosing each of the 3 rulings at that specific profile $(k_0, k_1, k_2)$:
+When a user clicks or hovers over a profile $v = (k_0, k_1, k_2)$, the **Radial Selection Popover**, the **Constitutional Ruling Chambers**, and the **Electorate Profile & SWF Constraint Inspector** dynamically compute and display the **exact Arrovian implications and algebraic constraints on the Social Welfare Function $F: \mathcal{L}(A)^n \to \mathcal{L}(A)$**.
 
-### 3.1 Coalition & Majority/Minority Implication at Profile $(k_0, k_1, k_2)$
-At profile $v = (k_0, k_1, k_2)$ with $k_0 + k_1 + k_2 = n$:
+### 3.1 Ordered Electorate Voter-ID Partition at Profile $(k_0, k_1, k_2)$
+At profile $v = (k_0, k_1, k_2)$ with $k_0 + k_1 + k_2 = n$, the ordered electorate $V = \{\#1, \#2, \dots, \#n\}$ is partitioned into three contiguous voter blocks:
+- **Block $G_0(v) = \{\#1, \dots, \#k_0\}$** ($\emptyset$ if $k_0 = 0$): votes $A \succ B \succ C$ *(only voters ranking $A \succ C$)*.
+- **Block $G_1(v) = \{\#(k_0 + 1), \dots, \#(k_0 + k_1)\}$** ($\emptyset$ if $k_1 = 0$): votes $B \succ C \succ A$ *(only voters ranking $B \succ A$)*.
+- **Block $G_2(v) = \{\#(k_0 + k_1 + 1), \dots, \#n\}$** ($\emptyset$ if $k_2 = 0$): votes $C \succ A \succ B$ *(only voters ranking $C \succ B$)*.
+- The right-hand **Electorate Profile & SWF Constraint Inspector** displays the exact voter ID range for each block (e.g., `G₀: {#1}`, `G₁: {#2, #3}`, `G₂: {#4..#6}`).
+
+### 3.2 Coalition & Majority/Minority Implication at Profile $(k_0, k_1, k_2)$
 - **Ruling `A ≻ C` (Rose/Crimson)**:
-  - **Supporting Coalition**: Block $G_0$ ($A \succ B \succ C$) with **$k_0$ voters**.
-  - **Opposing Coalition**: Blocks $G_1 \cup G_2$ (who both rank $C \succ A$) with **$n - k_0$ voters**.
+  - **Supporting Coalition**: Block $G_0(v)$ ($k_0$ voters) vs. Opposing $G_1 \cup G_2$ ($n - k_0$ voters).
   - **Arrovian Implication Badge**:
     - If $k_0 > n - k_0$: `Majority Rule (${k_0} vs ${n - k_0})`
     - If $k_0 === n - k_0$: `Split Tie-Break (${k_0} vs ${n - k_0})`
     - If $k_0 === 1$: `1-Voter Dictator Override (1 vs ${n - 1})`
     - If $1 < k_0 < n - k_0$: `Minority Override (${k_0} vs ${n - k_0})`
 - **Ruling `B ≻ A` (Emerald)**:
-  - **Supporting Coalition**: Block $G_1$ ($B \succ C \succ A$) with **$k_1$ voters** vs. Opposing $G_0 \cup G_2$ with **$n - k_1$ voters**.
+  - **Supporting Coalition**: Block $G_1(v)$ ($k_1$ voters) vs. Opposing $G_0 \cup G_2$ ($n - k_1$ voters).
 - **Ruling `C ≻ B` (Indigo)**:
-  - **Supporting Coalition**: Block $G_2$ ($C \succ A \succ B$) with **$k_2$ voters** vs. Opposing $G_0 \cup G_1$ with **$n - k_2$ voters**.
+  - **Supporting Coalition**: Block $G_2(v)$ ($k_2$ voters) vs. Opposing $G_0 \cup G_1$ ($n - k_2$ voters).
 
-### 3.2 Local Transitivity / Dictator Implication Preview
+### 3.3 Explicit Constraints on the Social Welfare Function $F$
+Coloring a profile $v = (k_0, k_1, k_2)$ with ruling $c \in \{0, 1, 2\}$ places two explicit mathematical constraints on $F$, displayed on the **Ruling Cards (`ColorPicker.tsx`)** and in the **Inspector Panel**:
+1. **Pointwise Output Constraint on $F(P(v)) \in \mathcal{L}(\{A, B, C\})$ (Out of $3! = 6$ Strict Rankings)**:
+   - **Ruling $A \succ C$ (`0`)**: Constrains $F(P(v)) \in \{A \succ B \succ C,\; A \succ C \succ B,\; B \succ A \succ C\}$ (eliminates the 3 rankings where $C \succ A$).
+   - **Ruling $B \succ A$ (`1`)**: Constrains $F(P(v)) \in \{B \succ C \succ A,\; C \succ B \succ A,\; B \succ A \succ C\}$ (Tanaka disjoint partition: $F(P(v)) \in \{B \succ C \succ A,\; C \succ B \succ A\}$).
+   - **Ruling $C \succ B$ (`2`)**: Constrains $F(P(v)) \in \{C \succ A \succ B,\; C \succ B \succ A,\; A \succ C \succ B\}$ (Tanaka disjoint partition: pins $F(P(v)) = C \succ A \succ B$).
+2. **IIA Decisive Coalition & Dictator Constraint ($D_G(x, y)$)**:
+   - **Ruling $A \succ C$ (`0`)**: Forces $D_{G_0(v)}(A, C) \to d \in \{\#1 \dots \#k_0\}$.
+   - **Ruling $B \succ A$ (`1`)**: Forces $D_{G_1(v)}(B, A) \to d \in \{\#(k_0+1) \dots \#(k_0+k_1)\}$.
+   - **Ruling $C \succ B$ (`2`)**: Forces $D_{G_2(v)}(C, B) \to d \in \{\#(k_0+k_1+1) \dots \#n\}$.
+
+### 3.4 Local Transitivity / Dictator Implication Preview
 For the selected (or hovered) legal profile $v = (k_0, k_1, k_2)$, evaluate each candidate ruling $c \in \{0, 1, 2\}$ against the (up to 6) incident Voter-Shift Triads:
 1. **Case 1 — Locally Transitive (Safe Precedent)**: No incident triad completes $\{A \succ C, B \succ A, C \succ B\}$.
 2. **Case 2 — Triggers Arrovian Impossibility (Fatal Cycle / Dictator)**: Completing ruling $c$ at $v$ forms $m \ge 1$ panchromatic Arrovian Paradox Triads with already-adjudicated neighbors, immediately creating the cycle $A \succ C \succ B \succ A$ and unmasking a **Pivotal Dictator Voter $d$**.

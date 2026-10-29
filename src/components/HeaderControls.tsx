@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Dices, RotateCcw, Eye, Triangle, Sparkles, Radar } from 'lucide-react';
 import { BOARD_SIZES } from '../engine/barycentric';
 
@@ -14,7 +14,6 @@ export interface HeaderControlsProps {
   readonly latestVersion?: string | null;
   readonly onApplyUpdate?: () => void;
   readonly onChangeBoardSize: (n: number) => void;
-  readonly onChangeSeed: (seed: string) => void;
   readonly onRandomizeSeed: () => void;
   readonly onResetBoard: () => void;
   readonly onToggleBadges: () => void;
@@ -32,23 +31,10 @@ export const HeaderControls: React.FC<HeaderControlsProps> = ({
   latestVersion = null,
   onApplyUpdate,
   onChangeBoardSize,
-  onChangeSeed,
   onRandomizeSeed,
   onResetBoard,
   onToggleBadges,
 }) => {
-  const [seedDraft, setSeedDraft] = useState(seed);
-
-  useEffect(() => {
-    setSeedDraft(seed);
-  }, [seed]);
-
-  const handleSeedSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleaned = seedDraft.trim() || 'arrow-1951';
-    setSeedDraft(cleaned);
-    onChangeSeed(cleaned);
-  };
 
   return (
     <header className="border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md">
@@ -123,32 +109,21 @@ export const HeaderControls: React.FC<HeaderControlsProps> = ({
             </select>
           </label>
 
-          {/* Deterministic Constitution Seed Input */}
-          <form
-            onSubmit={handleSeedSubmit}
-            className="flex items-center rounded-lg border border-slate-800 bg-slate-900/90 px-2.5 py-1 text-xs"
+          {/* One-Click Boundary Seed Randomizer & Restart */}
+          <button
+            type="button"
+            data-testid="boundary-seed-button"
+            onClick={onRandomizeSeed}
+            title="Click to generate a new random Boundary Seed, re-color the Pareto boundary, and restart at Step 1"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-indigo-500/30 bg-slate-900/90 px-3 py-1.5 text-xs text-slate-200 transition-colors hover:border-indigo-400/60 hover:bg-slate-800/90"
           >
-            <span className="mr-1.5 font-medium text-slate-400">
-              Constitution Seed:
+            <Dices className="h-3.5 w-3.5 text-indigo-400" />
+            <span className="font-medium text-slate-400">Border Seed:</span>
+            <span className="font-mono font-bold text-indigo-200">{seed}</span>
+            <span className="rounded bg-indigo-500/20 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-indigo-300">
+              New Border
             </span>
-            <input
-              type="text"
-              aria-label="Board seed"
-              value={seedDraft}
-              onChange={(e) => setSeedDraft(e.target.value)}
-              onBlur={handleSeedSubmit}
-              className="w-24 bg-transparent font-mono text-xs text-slate-100 placeholder-slate-500 focus:outline-none sm:w-28"
-              placeholder="arrow-1951"
-            />
-            <button
-              type="button"
-              onClick={onRandomizeSeed}
-              title="Generate random constitution seed"
-              className="ml-1 rounded p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-indigo-300"
-            >
-              <Dices className="h-3.5 w-3.5" />
-            </button>
-          </form>
+          </button>
 
           {/* Accessible Profile Rulings Toggle */}
           <button

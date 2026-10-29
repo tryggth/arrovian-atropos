@@ -5,7 +5,7 @@ import {
   RulingColor,
   VertexId,
 } from '../engine/barycentric';
-import { RulingImplication } from '../engine/arrowProof';
+import { RulingImplication, SWF_OUTPUT_CONSTRAINTS } from '../engine/arrowProof';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -188,7 +188,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                 >
                   <div className="flex flex-wrap items-center justify-between gap-1">
                     <span className="font-mono font-semibold text-slate-200">
-                      Empowers {imp.coalitionBlock} ({imp.splitLabel})
+                      Empowers {imp.coalitionBlock} {imp.voterRangeLabel} ({imp.splitLabel})
                     </span>
                     <span
                       className={`rounded px-1.5 py-0.5 font-mono text-[10px] font-bold ${
@@ -207,6 +207,21 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                     >
                       {imp.powerClassification}
                     </span>
+                  </div>
+
+                  <div className="space-y-0.5 rounded-md border border-slate-800/90 bg-slate-950/75 px-2 py-1.5 font-mono text-[10px]">
+                    <div
+                      data-testid={`swf-output-constraint-${c}`}
+                      className="text-slate-200"
+                    >
+                      {imp.swfOutputConstraint}
+                    </div>
+                    <div
+                      data-testid={`swf-decisive-constraint-${c}`}
+                      className="text-indigo-300"
+                    >
+                      {imp.decisiveCoalitionFormula}
+                    </div>
                   </div>
 
                   {showImpossibilityWarnings && inspectedIsUnadjudicated && (
@@ -235,8 +250,11 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                   )}
                 </div>
               ) : (
-                <div className="mt-2 border-t border-slate-800/80 pt-1.5 text-[11px] text-slate-400">
-                  {meta.unanimousConstraint}
+                <div className="mt-2 space-y-1 border-t border-slate-800/80 pt-1.5 text-[11px] text-slate-400">
+                  <div className="font-mono text-[10px] text-indigo-300">
+                    {SWF_OUTPUT_CONSTRAINTS[c].outputSet}
+                  </div>
+                  <div>{meta.unanimousConstraint}</div>
                 </div>
               )}
             </button>

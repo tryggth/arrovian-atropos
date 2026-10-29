@@ -65,6 +65,17 @@ export interface ParadoxTriadProof {
   readonly explanation: string;
 }
 
+export interface VoterBlockPartition {
+  readonly blockIndex: RulingColor;
+  readonly blockLabel: 'G₀' | 'G₁' | 'G₂';
+  readonly ranking: string;
+  readonly count: number;
+  readonly startVoterId: number | null;
+  readonly endVoterId: number | null;
+  readonly voterIds: readonly number[];
+  readonly rangeLabel: string;
+}
+
 export interface RulingImplication {
   readonly ruling: RulingColor;
   readonly rulingText: string;
@@ -75,6 +86,10 @@ export interface RulingImplication {
   readonly opposeVotes: number;
   readonly totalVoters: number;
   readonly splitLabel: string;
+  readonly voterRangeLabel: string;
+  readonly swfOutputConstraint: string;
+  readonly tanakaPartitionConstraint: string;
+  readonly decisiveCoalitionFormula: string;
   readonly powerClassification: PowerClassification;
   readonly powerBadgeText: string;
   readonly compactPillText: string;
@@ -82,6 +97,89 @@ export interface RulingImplication {
   readonly triggeredTriads: readonly ElementaryTriangle[];
   readonly pivotalDictatorVoter: number | null;
   readonly primaryParadoxProof: ParadoxTriadProof | null;
+}
+
+export const SWF_OUTPUT_CONSTRAINTS: Record<
+  RulingColor,
+  {
+    readonly outputSet: string;
+    readonly tanakaSet: string;
+    readonly decisivePair: string;
+  }
+> = {
+  0: {
+    outputSet: 'F(P) ∈ {A≻B≻C, A≻C≻B, B≻A≻C}',
+    tanakaSet: 'Tanaka Partition: {A≻B≻C, A≻C≻B, B≻A≻C}',
+    decisivePair: 'D_G₀(A,C)',
+  },
+  1: {
+    outputSet: 'F(P) ∈ {B≻C≻A, C≻B≻A, B≻A≻C}',
+    tanakaSet: 'Tanaka Partition: {B≻C≻A, C≻B≻A}',
+    decisivePair: 'D_G₁(B,A)',
+  },
+  2: {
+    outputSet: 'F(P) ∈ {C≻A≻B, C≻B≻A, A≻C≻B}',
+    tanakaSet: 'Tanaka Partition: {C≻A≻B}',
+    decisivePair: 'D_G₂(C,B)',
+  },
+};
+
+/**
+ * Formats a contiguous range of 1-indexed Voter IDs into a compact set string:
+ *  - count = 0 -> '∅'
+ *  - count = 1 -> '{#s}'
+ *  - count = 2 -> '{#s, #(s+1)}'
+ *  - count >= 3 -> '{#s..#e}'
+ */
+export function formatVoterRange(startVoterId: number, count: number): string {
+  if (count <= 0) return '∅';
+  if (count === 1) return `{#${startVoterId}}`;
+  if (count === 2) return `{#${startVoterId}, #${startVoterId + 1}}`;
+  return `{#${startVoterId}..#${startVoterId + count - 1}}`;
+}
+
+/**
+ * Computes the contiguous Voter-ID partition for blocks G_0(v), G_1(v), G_2(v)
+ * at preference profile v = (k_0, k_1, k_2) with k_0 + k_1 + k_2 = n:
+ *  - G_0(v) = {#1 .. #k_0}
+ *  - G_1(v) = {#(k_0 + 1) .. #(k_0 + k_1)}
+ *  - G_2(v) = {#(k_0 + k_1 + 1) .. #n}
+ */
+export function computeVoterBlockPartitions(coord: BarycentricCoord): readonly [
+  VoterBlockPartition,
+  VoterBlockPartition,
+  VoterBlockPartition,
+] {
+  const [k0, k1, k2] = coord;
+
+  const buildBlock = (
+    blockIndex: RulingColor,
+    startOffset: number,
+    count: number
+  ): VoterBlockPartition => {
+    const meta = RULING_COLORS[blockIndex];
+    const startVoterId = count > 0 ? startOffset + 1 : null;
+    const endVoterId = count > 0 ? startOffset + count : null;
+    const voterIds = Array.from({ length: count }, (_, i) => startOffset + 1 + i);
+    const rangeLabel = formatVoterRange(startOffset + 1, count);
+
+    return {
+      blockIndex,
+      blockLabel: meta.coalitionBlock,
+      ranking: meta.coalitionRanking,
+      count,
+      startVoterId,
+      endVoterId,
+      voterIds,
+      rangeLabel,
+    };
+  };
+
+  return [
+    buildBlock(0, 0, k0),
+    buildBlock(1, k0, k1),
+    buildBlock(2, k0 + k1, k2),
+  ];
 }
 
 /**
@@ -313,6 +411,14 @@ export function evaluateRulingImplication(
   const opposeVotes = graph.n - supportVotes;
   const splitLabel = `${supportVotes} vs ${opposeVotes}`;
 
+  const partitions = computeVoterBlockPartitions(vertex.coord);
+  const blockPartition = partitions[ruling];
+  const voterRangeLabel = blockPartition.rangeLabel;
+  const swfMeta = SWF_OUTPUT_CONSTRAINTS[ruling];
+  const swfOutputConstraint = swfMeta.outputSet;
+  const tanakaPartitionConstraint = swfMeta.tanakaSet;
+  const decisiveCoalitionFormula = `Forces ${swfMeta.decisivePair} → d ∈ ${voterRangeLabel}`;
+
   const { classification, powerBadgeText, compactPillText } =
     classifyPowerDynamics(supportVotes, opposeVotes, meta.coalitionBlock);
 
@@ -341,6 +447,10 @@ export function evaluateRulingImplication(
     opposeVotes,
     totalVoters: graph.n,
     splitLabel,
+    voterRangeLabel,
+    swfOutputConstraint,
+    tanakaPartitionConstraint,
+    decisiveCoalitionFormula,
     powerClassification: classification,
     powerBadgeText,
     compactPillText,
