@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
+  BarycentricCoord,
   DEFAULT_BOARD_SIZE,
   RULING_COLORS,
   RulingColor,
@@ -23,6 +24,7 @@ import { ColorPicker } from './components/ColorPicker';
 import { InspectorPanel } from './components/InspectorPanel';
 import { PossibleDictatorsPanel } from './components/PossibleDictatorsPanel';
 import { DictatorModal } from './components/DictatorModal';
+import { VoterRosterBar } from './components/VoterRosterBar';
 import { Compass, Footprints, ScrollText, ShieldAlert } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -136,6 +138,23 @@ export const App: React.FC = () => {
       inspectedId
     );
   }, [gameState.graph, gameState.colors, inspectedId, inspectedVertex]);
+
+  const lastMoveVertex = gameState.lastMove
+    ? gameState.graph.vertices.get(gameState.lastMove) ?? null
+    : null;
+  const defaultCenterCoord: BarycentricCoord = [
+    Math.floor(boardSize / 3),
+    Math.floor(boardSize / 3),
+    boardSize - 2 * Math.floor(boardSize / 3),
+  ];
+  const activeRosterCoord = inspectedVertex?.coord ?? defaultCenterCoord;
+  const activeRosterLabel = hoveredVertexId
+    ? 'Hovered Node'
+    : selectedVertexId
+      ? 'Selected Node'
+      : gameState.lastMove
+        ? 'Precedent Anchor'
+        : 'Center Divided Profile';
 
   const totalDividedProfiles = gameState.graph.interiorIds.length;
   const adjudicatedProfiles = gameState.moveHistory.length;
@@ -259,6 +278,17 @@ export const App: React.FC = () => {
               onPlayAgain={() => startNewGame(boardSize, seed)}
             />
           )}
+
+          {/* Interactive 6-Voter & 3-Candidate Electorate Roster Bar */}
+          <VoterRosterBar
+            n={boardSize}
+            activeCoord={activeRosterCoord}
+            activeCoordLabel={activeRosterLabel}
+            lastMoveCoord={lastMoveVertex?.coord ?? null}
+            dictatorAnalysis={dictatorAnalysis}
+            hoveredDictatorId={hoveredDictatorId}
+            onHoverDictator={setHoveredDictatorId}
+          />
 
           {/* Interactive SVG Barycentric Preference Simplex */}
           <LatticeBoard

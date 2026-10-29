@@ -19,13 +19,90 @@ export type RulingColor = 0 | 1 | 2;
 export type BarycentricCoord = readonly [number, number, number];
 export type VertexId = string;
 
+export interface CandidateMetadata {
+  readonly id: 'A' | 'B' | 'C';
+  readonly name: 'Atlas' | 'Boreas' | 'Cybele';
+  readonly shape: '●' | '■' | '▲';
+  readonly shortTag: '●A' | '■B' | '▲C';
+  readonly fullLabel: '●A (Atlas)' | '■B (Boreas)' | '▲C (Cybele)';
+  readonly hexColor: string;
+}
+
+export const CANDIDATES: Record<RulingColor, CandidateMetadata> = {
+  0: {
+    id: 'A',
+    name: 'Atlas',
+    shape: '●',
+    shortTag: '●A',
+    fullLabel: '●A (Atlas)',
+    hexColor: '#f43f5e',
+  },
+  1: {
+    id: 'B',
+    name: 'Boreas',
+    shape: '■',
+    shortTag: '■B',
+    fullLabel: '■B (Boreas)',
+    hexColor: '#10b981',
+  },
+  2: {
+    id: 'C',
+    name: 'Cybele',
+    shape: '▲',
+    shortTag: '▲C',
+    fullLabel: '▲C (Cybele)',
+    hexColor: '#6366f1',
+  },
+};
+
+export const VOTER_NAMES: readonly string[] = [
+  'Ada',
+  'Blaise',
+  'Condorcet',
+  'Dodgson',
+  'Emmy',
+  'Kenneth',
+  'Leonhard',
+  'Maskin',
+  'Nash',
+  'Pareto',
+  'Sen',
+  'Sperner',
+] as const;
+
+export function getVoterName(voterId: number): string {
+  return VOTER_NAMES[voterId - 1] ?? `Voter ${voterId}`;
+}
+
+export function getVoterLabel(voterId: number): string {
+  return `V${voterId} · ${getVoterName(voterId)}`;
+}
+
 export interface ColorMetadata {
   readonly color: RulingColor;
   readonly name: string;
   readonly ruling: string;
   readonly shortBadge: string;
+  readonly candidateId: 'A' | 'B' | 'C';
+  readonly candidateName: 'Atlas' | 'Boreas' | 'Cybele';
+  readonly candidateShape: '●' | '■' | '▲';
+  readonly candidateFullLabel: '●A (Atlas)' | '■B (Boreas)' | '▲C (Cybele)';
+  readonly shapedRuling: '●A ≻ ▲C' | '■B ≻ ●A' | '▲C ≻ ■B';
+  readonly shapedBadge: '● A≻C' | '■ B≻A' | '▲ C≻B';
   readonly coalitionBlock: 'G₀' | 'G₁' | 'G₂';
   readonly coalitionRanking: string;
+  readonly shapedCoalitionRanking:
+    | '●A ≻ ■B ≻ ▲C'
+    | '■B ≻ ▲C ≻ ●A'
+    | '▲C ≻ ●A ≻ ■B';
+  readonly crownedWinnerText:
+    | 'Cuts ▲C≻●A → ●A (Atlas) Wins'
+    | 'Cuts ●A≻■B → ■B (Boreas) Wins'
+    | 'Cuts ■B≻▲C → ▲C (Cybele) Wins';
+  readonly crownedWinnerShort:
+    | '●A (Atlas) Wins'
+    | '■B (Boreas) Wins'
+    | '▲C (Cybele) Wins';
   readonly forbiddenAxis: 0 | 1 | 2;
   readonly unanimousConstraint: string;
   readonly hexFill: string;
@@ -38,8 +115,17 @@ export const RULING_COLORS: Record<RulingColor, ColorMetadata> = {
     name: 'Ruling A ≻ C',
     ruling: 'A ≻ C',
     shortBadge: 'A≻C',
+    candidateId: 'A',
+    candidateName: 'Atlas',
+    candidateShape: '●',
+    candidateFullLabel: '●A (Atlas)',
+    shapedRuling: '●A ≻ ▲C',
+    shapedBadge: '● A≻C',
     coalitionBlock: 'G₀',
     coalitionRanking: 'A ≻ B ≻ C',
+    shapedCoalitionRanking: '●A ≻ ■B ≻ ▲C',
+    crownedWinnerText: 'Cuts ▲C≻●A → ●A (Atlas) Wins',
+    crownedWinnerShort: '●A (Atlas) Wins',
     forbiddenAxis: 0,
     unanimousConstraint: 'Pareto Forbids on k₀ = 0 (Unanimous C ≻ A)',
     hexFill: '#f43f5e',
@@ -50,8 +136,17 @@ export const RULING_COLORS: Record<RulingColor, ColorMetadata> = {
     name: 'Ruling B ≻ A',
     ruling: 'B ≻ A',
     shortBadge: 'B≻A',
+    candidateId: 'B',
+    candidateName: 'Boreas',
+    candidateShape: '■',
+    candidateFullLabel: '■B (Boreas)',
+    shapedRuling: '■B ≻ ●A',
+    shapedBadge: '■ B≻A',
     coalitionBlock: 'G₁',
     coalitionRanking: 'B ≻ C ≻ A',
+    shapedCoalitionRanking: '■B ≻ ▲C ≻ ●A',
+    crownedWinnerText: 'Cuts ●A≻■B → ■B (Boreas) Wins',
+    crownedWinnerShort: '■B (Boreas) Wins',
     forbiddenAxis: 1,
     unanimousConstraint: 'Pareto Forbids on k₁ = 0 (Unanimous A ≻ B)',
     hexFill: '#10b981',
@@ -62,8 +157,17 @@ export const RULING_COLORS: Record<RulingColor, ColorMetadata> = {
     name: 'Ruling C ≻ B',
     ruling: 'C ≻ B',
     shortBadge: 'C≻B',
+    candidateId: 'C',
+    candidateName: 'Cybele',
+    candidateShape: '▲',
+    candidateFullLabel: '▲C (Cybele)',
+    shapedRuling: '▲C ≻ ■B',
+    shapedBadge: '▲ C≻B',
     coalitionBlock: 'G₂',
     coalitionRanking: 'C ≻ A ≻ B',
+    shapedCoalitionRanking: '▲C ≻ ●A ≻ ■B',
+    crownedWinnerText: 'Cuts ■B≻▲C → ▲C (Cybele) Wins',
+    crownedWinnerShort: '▲C (Cybele) Wins',
     forbiddenAxis: 2,
     unanimousConstraint: 'Pareto Forbids on k₂ = 0 (Unanimous B ≻ C)',
     hexFill: '#6366f1',

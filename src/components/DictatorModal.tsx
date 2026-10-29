@@ -1,5 +1,5 @@
 import React from 'react';
-import { RULING_COLORS } from '../engine/barycentric';
+import { getVoterLabel, RULING_COLORS } from '../engine/barycentric';
 import { extractParadoxTriadProof } from '../engine/arrowProof';
 import { GameState } from '../engine/gameState';
 import { Crown, RotateCcw, ShieldAlert } from 'lucide-react';
@@ -92,7 +92,7 @@ export const DictatorModal: React.FC<DictatorModalProps> = ({
                 data-testid="pivotal-dictator-badge"
                 className="font-mono font-bold text-amber-300"
               >
-                Pivotal Dictator Unmasked: Voter #{proof.pivotalVoterIndex}
+                👑 Pivotal Dictator Unmasked: Voter #{proof.pivotalVoterIndex} ({getVoterLabel(proof.pivotalVoterIndex)})
               </span>
             </div>
             <span className="rounded bg-amber-500/20 px-2 py-0.5 font-mono text-[11px] font-bold text-amber-200">

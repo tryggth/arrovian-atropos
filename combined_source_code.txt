@@ -1,7 +1,7 @@
 ================================================================================
- ARROVIAN ATROPOS PWA (v0.2.5) - COMBINED SOURCE CODE BUNDLE
- Generated on: 2026-10-29T22:20:28.547Z
- Total Source Files: 25
+ ARROVIAN ATROPOS PWA (v0.2.6) - COMBINED SOURCE CODE BUNDLE
+ Generated on: 2026-10-29T22:35:06.732Z
+ Total Source Files: 26
 ================================================================================
 
 
@@ -132,7 +132,7 @@ This project enforces a strict **2-level sub-agent routing architecture** using 
 
 # SPEC: Arrovian Atropos PWA (Progressive Web App)
 
-- **Document Version**: `0.2.3`
+- **Document Version**: `0.3.0-alpha`
 - **Target Agent**: `agy` (Google Antigravity CLI)
 - **Source of Truth Notebook**: `Hidden Dictator Game` (`notebooks/2b675003-edce-43bf-91cd-5d0ee2c33f77`)
 
@@ -147,6 +147,20 @@ This project enforces a strict **2-level sub-agent routing architecture** using 
 - **Gameplay ("The Constitutional Architect's Dilemma")**:
   - The user acts as the **Constitutional Architect** stepping from profile to profile via **Single-Voter Shifts ($k=1$)**, trying to adjudicate as many divided preference profiles as possible without triggering a Condorcet Paradox or unmasking a Hidden Dictator.
   - Because Arrow's Theorem guarantees the puzzle has **no complete solution** (0% survival rate at 100% completion), the player experiences Arrow's Impossibility Theorem firsthand as safe rulings narrow down until a final profile forces a Dictator/Paradox under all 3 choices.
+
+### 1.2 Concrete 3-Candidate & 6-Voter Senate Visualization (`v0.3.0-alpha`)
+To make it immediately obvious **WHO** the 3 candidates and $n=6$ voters are, **WHAT** circular deadlock is occurring at the selected node, **WHY** the Architect must rule, and **WHICH** voter is the Dictator:
+1. **Concrete 3-Candidate System (Shape + Color + Name + Cycle-Breaking Meaning)**:
+   - **Candidate A (`● Atlas` — Crimson Circle `#f43f5e`)**: Championed by Faction $G_0$ (`●A ≻ ■B ≻ ▲C`). Ruling `●A ≻ ▲C` breaks the cycle (`Cuts ▲C≻●A → ●A (Atlas) Wins`).
+   - **Candidate B (`■ Boreas` — Emerald Square `#10b981`)**: Championed by Faction $G_1$ (`■B ≻ ▲C ≻ ●A`). Ruling `■B ≻ ●A` breaks the cycle (`Cuts ●A≻■B → ■B (Boreas) Wins`).
+   - **Candidate C (`▲ Cybele` — Indigo Triangle `#6366f1`)**: Championed by Faction $G_2$ (`▲C ≻ ●A ≻ ■B`). Ruling `▲C ≻ ■B` breaks the cycle (`Cuts ■B≻▲C → ▲C (Cybele) Wins`).
+   - Colored lattice nodes and radial choice pills render the geometric shape (`●`, `■`, `▲`) alongside the pairwise ruling.
+2. **On-Board 6-Voter Senate Roster & Live Dictator Identification (`VoterRosterBar.tsx` + `LatticeBoard.tsx`)**:
+   - Displays the $n$ individual voters directly above the board (`V1 · Ada`, `V2 · Blaise`, `V3 · Condorcet`, `V4 · Dodgson`, `V5 · Emmy`, `V6 · Kenneth` for $n=6$; up to $n=12$).
+   - Color-codes each Voter Card by their Faction block ($G_0, G_1, G_2$) at the active/hovered profile $(k_0, k_1, k_2)$ and badges the exact voter who flipped their ballot (`⚡ Flipped Ballot`) when $d(u, v) = 1$ from `lastMove`.
+   - Displays live Dictator status on each Voter Card (`⚠️ ARMED DICTATOR`, `🔍 SUSPECT`, `✅ CLEARED`, and `👑 DICTATOR UNMASKED` at game over) and labels `👑 Dictator: Voter #d` directly on the losing triangle on the SVG board.
+3. **"Why You Must Rule" Election Deadlock Case Prompt (`ColorPicker.tsx`)**:
+   - Displays a 2-line **"Election Deadlock Case"** summary banner above the 3 ruling cards when inspecting an open interior node (`The Problem` + `Your Job as Constitutional Architect`), and shows **Crowned Winner** + **Voters Empowered** (`Sides with V1 (1 voter) over V2–V6 (5 voters)`) on each Ruling Card and Radial Option.
 
 ---
 
@@ -341,7 +355,7 @@ To match the established `agy` deployment pattern used across sibling PWA projec
 {
   "name": "arrovian-atropos",
   "private": true,
-  "version": "0.2.5",
+  "version": "0.2.6",
   "type": "module",
   "description": "Arrovian Atropos PWA — Sperner's Lemma & Arrow's Impossibility Theorem Game",
   "scripts": {
@@ -388,10 +402,10 @@ To match the established `agy` deployment pattern used across sibling PWA projec
 
 {
   "name": "Arrovian Atropos PWA",
-  "version": "v0.2.5",
-  "buildVersion": "arrovian-atropos-v0.2.5-0b2d673-1793312428498",
-  "commitSha": "0b2d673",
-  "timestamp": 1793312428498
+  "version": "v0.2.6",
+  "buildVersion": "arrovian-atropos-v0.2.6-2eaf0ec-1793313306692",
+  "commitSha": "2eaf0ec",
+  "timestamp": 1793313306692
 }
 
 
@@ -461,6 +475,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
+  BarycentricCoord,
   DEFAULT_BOARD_SIZE,
   RULING_COLORS,
   RulingColor,
@@ -484,6 +499,7 @@ import { ColorPicker } from './components/ColorPicker';
 import { InspectorPanel } from './components/InspectorPanel';
 import { PossibleDictatorsPanel } from './components/PossibleDictatorsPanel';
 import { DictatorModal } from './components/DictatorModal';
+import { VoterRosterBar } from './components/VoterRosterBar';
 import { Compass, Footprints, ScrollText, ShieldAlert } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -597,6 +613,23 @@ export const App: React.FC = () => {
       inspectedId
     );
   }, [gameState.graph, gameState.colors, inspectedId, inspectedVertex]);
+
+  const lastMoveVertex = gameState.lastMove
+    ? gameState.graph.vertices.get(gameState.lastMove) ?? null
+    : null;
+  const defaultCenterCoord: BarycentricCoord = [
+    Math.floor(boardSize / 3),
+    Math.floor(boardSize / 3),
+    boardSize - 2 * Math.floor(boardSize / 3),
+  ];
+  const activeRosterCoord = inspectedVertex?.coord ?? defaultCenterCoord;
+  const activeRosterLabel = hoveredVertexId
+    ? 'Hovered Node'
+    : selectedVertexId
+      ? 'Selected Node'
+      : gameState.lastMove
+        ? 'Precedent Anchor'
+        : 'Center Divided Profile';
 
   const totalDividedProfiles = gameState.graph.interiorIds.length;
   const adjudicatedProfiles = gameState.moveHistory.length;
@@ -720,6 +753,17 @@ export const App: React.FC = () => {
               onPlayAgain={() => startNewGame(boardSize, seed)}
             />
           )}
+
+          {/* Interactive 6-Voter & 3-Candidate Electorate Roster Bar */}
+          <VoterRosterBar
+            n={boardSize}
+            activeCoord={activeRosterCoord}
+            activeCoordLabel={activeRosterLabel}
+            lastMoveCoord={lastMoveVertex?.coord ?? null}
+            dictatorAnalysis={dictatorAnalysis}
+            hoveredDictatorId={hoveredDictatorId}
+            onHoverDictator={setHoveredDictatorId}
+          />
 
           {/* Interactive SVG Barycentric Preference Simplex */}
           <LatticeBoard
@@ -923,9 +967,12 @@ import App from '../App';
 import { DEFAULT_APP_VERSION } from '../hooks/useAppUpdate';
 import {
   BOARD_SIZES,
+  CANDIDATES,
   createLatticeGraph,
   findAllPanchromaticTriangles,
   generateBoundaryColoring,
+  getVoterLabel,
+  getVoterName,
   latticeDistance,
   RulingColor,
   toVertexId,
@@ -937,7 +984,9 @@ import {
 } from '../engine/gameState';
 import {
   analyzePossibleDictators,
+  buildElectorateRosterAtProfile,
   classifyPowerDynamics,
+  computeFlippedVoterBetweenProfiles,
   computePairwiseTallies,
   computePivotalVoterIndex,
   computeVoterBlockPartitions,
@@ -945,6 +994,7 @@ import {
   evaluateRulingImplication,
   extractParadoxTriadProof,
   formatVoterRange,
+  formatVotersEmpoweredText,
   getTriadPivotalVoter,
 } from '../engine/arrowProof';
 import { createSeededRNG } from '../engine/prng';
@@ -1320,6 +1370,70 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       expect(threat?.safeRulings).not.toContain(2);
       expect(threat?.lethalRulings.get(2)).toContain(3);
     });
+
+    it('verifies CANDIDATES metadata, getVoterLabel, computeFlippedVoterBetweenProfiles, formatVotersEmpoweredText, and buildElectorateRosterAtProfile', () => {
+      // 1. CANDIDATES metadata
+      expect(CANDIDATES[0].fullLabel).toBe('●A (Atlas)');
+      expect(CANDIDATES[0].shape).toBe('●');
+      expect(CANDIDATES[0].hexColor).toBe('#f43f5e');
+      expect(CANDIDATES[1].fullLabel).toBe('■B (Boreas)');
+      expect(CANDIDATES[1].shape).toBe('■');
+      expect(CANDIDATES[1].hexColor).toBe('#10b981');
+      expect(CANDIDATES[2].fullLabel).toBe('▲C (Cybele)');
+      expect(CANDIDATES[2].shape).toBe('▲');
+      expect(CANDIDATES[2].hexColor).toBe('#6366f1');
+
+      // 2. getVoterLabel & getVoterName
+      expect(getVoterName(1)).toBe('Ada');
+      expect(getVoterLabel(1)).toBe('V1 · Ada');
+      expect(getVoterName(2)).toBe('Blaise');
+      expect(getVoterLabel(2)).toBe('V2 · Blaise');
+      expect(getVoterName(6)).toBe('Kenneth');
+      expect(getVoterLabel(6)).toBe('V6 · Kenneth');
+
+      // 3. computeFlippedVoterBetweenProfiles
+      const flip = computeFlippedVoterBetweenProfiles([2, 2, 2], [1, 3, 2]);
+      expect(flip).not.toBeNull();
+      expect(flip?.voterId).toBe(2);
+      expect(flip?.voterLabel).toBe('V2 · Blaise');
+      expect(flip?.fromBlockLabel).toBe('G₀');
+      expect(flip?.toBlockLabel).toBe('G₁');
+      expect(flip?.summary).toContain('V2 · Blaise flipped ballot');
+
+      // Non-adjacent or null profiles
+      expect(computeFlippedVoterBetweenProfiles([2, 2, 2], [4, 1, 1])).toBeNull();
+      expect(computeFlippedVoterBetweenProfiles(null, [2, 2, 2])).toBeNull();
+
+      // 4. formatVotersEmpoweredText
+      expect(formatVotersEmpoweredText([2, 2, 2], 0)).toBe(
+        'Sides with V1–V2 (2 voters) over V3–V6 (4 voters)'
+      );
+      expect(formatVotersEmpoweredText([1, 3, 2], 0)).toBe(
+        'Sides with V1 (1 voter) over V2–V6 (5 voters)'
+      );
+
+      // 5. buildElectorateRosterAtProfile
+      const graph = createLatticeGraph(6);
+      const colors = generateBoundaryColoring(graph, 'arrow-1951');
+      const analysis = analyzePossibleDictators(graph, colors);
+      const seats = buildElectorateRosterAtProfile([2, 2, 2], null, analysis);
+      expect(seats.length).toBe(6);
+      expect(seats[0].fullLabel).toBe('V1 · Ada');
+      expect(seats[0].blockLabel).toBe('G₀');
+      expect(seats[0].shapedRanking).toBe('●A ≻ ■B ≻ ▲C');
+      expect(seats[0].championedCandidate).toBe('●A (Atlas)');
+      expect(seats[2].fullLabel).toBe('V3 · Condorcet');
+      expect(seats[2].blockLabel).toBe('G₁');
+      expect(seats[2].shapedRanking).toBe('■B ≻ ▲C ≻ ●A');
+      expect(seats[4].fullLabel).toBe('V5 · Emmy');
+      expect(seats[4].blockLabel).toBe('G₂');
+      expect(seats[4].shapedRanking).toBe('▲C ≻ ●A ≻ ■B');
+
+      // Check flipped flag when lastMove is adjacent
+      const adjacentSeats = buildElectorateRosterAtProfile([1, 3, 2], [2, 2, 2], analysis);
+      expect(adjacentSeats[1].isFlippedFromLastMove).toBe(true);
+      expect(adjacentSeats[0].isFlippedFromLastMove).toBe(false);
+    });
   });
 
   describe('6. Interactive SVG Simplex UI, Constitutional Architect Mode & Arrow Terminology (v0.2.0)', () => {
@@ -1484,6 +1598,81 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       fireEvent.click(toggleBtn);
       expect(screen.queryByTestId('possible-dictators-panel')).toBeNull();
     });
+
+    it('renders the concrete 6-voter roster bar with candidate pills and live dictator badges, displays election deadlock case banner, crowned winner, and voters empowered on selection, and displays flipped ballot on adjacent hover', () => {
+      render(React.createElement(App));
+
+      // 1. Verify voter-roster-bar is rendered with candidate pills
+      const rosterBar = screen.getByTestId('voter-roster-bar');
+      expect(rosterBar).toBeDefined();
+
+      expect(screen.getByTestId('candidate-pill-0').textContent).toContain(
+        '●A (Atlas)'
+      );
+      expect(screen.getByTestId('candidate-pill-1').textContent).toContain(
+        '■B (Boreas)'
+      );
+      expect(screen.getByTestId('candidate-pill-2').textContent).toContain(
+        '▲C (Cybele)'
+      );
+
+      // Verify Voters V1 through V6
+      expect(screen.getByTestId('voter-card-1').textContent).toContain('V1 · Ada');
+      expect(screen.getByTestId('voter-card-2').textContent).toContain('V2 · Blaise');
+      expect(screen.getByTestId('voter-card-3').textContent).toContain('V3 · Condorcet');
+      expect(screen.getByTestId('voter-card-4').textContent).toContain('V4 · Dodgson');
+      expect(screen.getByTestId('voter-card-5').textContent).toContain('V5 · Emmy');
+      expect(screen.getByTestId('voter-card-6').textContent).toContain('V6 · Kenneth');
+
+      // Verify live Dictator status badges (ARMED / SUSPECT / CLEARED)
+      const badgeTexts = [1, 2, 3, 4, 5, 6].map(
+        (id) => screen.getByTestId(`voter-dictator-badge-${id}`).textContent
+      );
+      expect(
+        badgeTexts.some(
+          (t) =>
+            t?.includes('⚠️ ARMED DICTATOR') ||
+            t?.includes('🔍 SUSPECT') ||
+            t?.includes('✅ CLEARED')
+        )
+      ).toBe(true);
+
+      // 2. Select (2,2,2)
+      const centerNode = screen.getByTestId('vertex-2,2,2');
+      fireEvent.click(centerNode);
+
+      // Election Deadlock Case Banner renders
+      const deadlockBanner = screen.getByTestId('election-deadlock-case-banner');
+      expect(deadlockBanner).toBeDefined();
+      expect(deadlockBanner.textContent).toContain('The Problem: At (2, 2, 2)');
+      expect(deadlockBanner.textContent).toContain('Your Job as Constitutional Architect');
+
+      // Crowned Winner and Voters Empowered
+      const crowned0 = screen.getByTestId('crowned-winner-0');
+      expect(crowned0.textContent).toContain('Cuts ▲C≻●A → ●A (Atlas) Wins');
+
+      const empowered0 = screen.getByTestId('voters-empowered-0');
+      expect(empowered0.textContent).toContain(
+        'Sides with V1–V2 (2 voters) over V3–V6 (4 voters)'
+      );
+
+      // 3. Commit move at (2,2,2) with ruling 0
+      const radialOption0 = screen.getByTestId('radial-color-option-0');
+      fireEvent.click(radialOption0);
+
+      // Now lastMove is (2,2,2). Hover adjacent node (1,3,2)
+      const adjacentNode = screen.getByTestId('vertex-1,3,2');
+      fireEvent.mouseEnter(adjacentNode);
+
+      // Flipped ballot badge appears on V2 · Blaise
+      const flippedBadge2 = screen.getByTestId('flipped-voter-badge-2');
+      expect(flippedBadge2).toBeDefined();
+      expect(flippedBadge2.textContent).toContain('⚡ Flipped Ballot');
+      expect(screen.getByTestId('voter-card-2').textContent).toContain('V2 · Blaise');
+
+      const flipCallout = screen.getByTestId('flipped-voter-callout');
+      expect(flipCallout.textContent).toContain('V2 · Blaise flipped ballot');
+    });
   });
 });
 
@@ -1606,6 +1795,25 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         </div>
       </div>
 
+      {/* Dynamic Election Deadlock Case Banner */}
+      {inspectedCoord !== null && inspectedIsUnadjudicated && (() => {
+        const [k0, k1, k2] = inspectedCoord;
+        const n = k0 + k1 + k2;
+        return (
+          <div
+            data-testid="election-deadlock-case-banner"
+            className="mb-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-100"
+          >
+            <div className="font-semibold text-amber-200">
+              The Problem: At ({k0}, {k1}, {k2}), the {n} voters are locked in a circular tie (●A ≻ ■B ≻ ▲C ≻ ●A) because two factions always team up against the third ({k0 + k2} voters want ●A ≻ ■B, {k0 + k1} want ■B ≻ ▲C, {k1 + k2} want ▲C ≻ ●A).
+            </div>
+            <div className="mt-1 text-slate-300">
+              Your Job as Constitutional Architect: Pick which link of the cycle to overturn (and which Faction of voters gets to win this election) without contradicting a neighboring election where only 1 voter changed their mind!
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
         {COLOR_LIST.map((c) => {
           const meta = RULING_COLORS[c];
@@ -1642,15 +1850,15 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
               }`}
             >
               <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-start gap-2.5">
                   <span
-                    className="flex h-8 w-11 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-black text-slate-950 shadow-sm"
+                    className="flex h-8 w-14 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-black text-slate-950 shadow-sm"
                     style={{
                       backgroundColor: meta.hexFill,
                       boxShadow: `0 0 12px ${meta.hexFill}66`,
                     }}
                   >
-                    {meta.shortBadge}
+                    {meta.shapedBadge}
                   </span>
                   <div>
                     <div className="flex items-center gap-1.5">
@@ -1658,9 +1866,15 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                         Ruling {meta.ruling}
                       </span>
                     </div>
-                    <span className="text-[11px] font-medium text-slate-400">
+                    <div className="text-[11px] font-medium text-slate-400">
                       Empowers {meta.coalitionBlock} ({meta.coalitionRanking})
-                    </span>
+                    </div>
+                    <div
+                      data-testid={`crowned-winner-${c}`}
+                      className="mt-0.5 text-[11px] font-bold text-amber-300"
+                    >
+                      {meta.crownedWinnerText}
+                    </div>
                   </div>
                 </div>
 
@@ -1681,6 +1895,12 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                   data-testid={`ruling-implication-${c}`}
                   className="mt-2.5 space-y-1.5 border-t border-slate-800/90 pt-2 text-[11px]"
                 >
+                  <div
+                    data-testid={`voters-empowered-${c}`}
+                    className="font-mono font-medium text-slate-300"
+                  >
+                    {imp.votersEmpoweredText}
+                  </div>
                   <div className="flex flex-wrap items-center justify-between gap-1">
                     <span className="font-mono font-semibold text-slate-200">
                       Empowers {imp.coalitionBlock} {imp.voterRangeLabel} ({imp.splitLabel})
@@ -1767,7 +1987,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
  * ============================================================================= */
 
 import React from 'react';
-import { RULING_COLORS } from '../engine/barycentric';
+import { getVoterLabel, RULING_COLORS } from '../engine/barycentric';
 import { extractParadoxTriadProof } from '../engine/arrowProof';
 import { GameState } from '../engine/gameState';
 import { Crown, RotateCcw, ShieldAlert } from 'lucide-react';
@@ -1860,7 +2080,7 @@ export const DictatorModal: React.FC<DictatorModalProps> = ({
                 data-testid="pivotal-dictator-badge"
                 className="font-mono font-bold text-amber-300"
               >
-                Pivotal Dictator Unmasked: Voter #{proof.pivotalVoterIndex}
+                👑 Pivotal Dictator Unmasked: Voter #{proof.pivotalVoterIndex} ({getVoterLabel(proof.pivotalVoterIndex)})
               </span>
             </div>
             <span className="rounded bg-amber-500/20 px-2 py-0.5 font-mono text-[11px] font-bold text-amber-200">
@@ -2314,6 +2534,7 @@ import {
 } from '../engine/barycentric';
 import {
   evaluateAllRulingsAtVertex,
+  getTriadPivotalVoter,
   PossibleDictatorsAnalysis,
 } from '../engine/arrowProof';
 import { GameState } from '../engine/gameState';
@@ -2550,7 +2771,7 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
             textAnchor="middle"
             className="fill-rose-400 font-bold text-xs"
           >
-            ({n}, 0, 0) · Unanimous G₀: A ≻ B ≻ C [Ruling A ≻ C]
+            ({n}, 0, 0) · Unanimous G₀: ●A ≻ ■B ≻ ▲C [●A (Atlas) Wins]
           </text>
 
           {/* Bottom-Left Unanimous Electorate Corner */}
@@ -2560,7 +2781,7 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
             textAnchor="start"
             className="fill-emerald-400 font-bold text-xs"
           >
-            (0, {n}, 0) · Unanimous G₁: B ≻ C ≻ A [Ruling B ≻ A]
+            (0, {n}, 0) · Unanimous G₁: ■B ≻ ▲C ≻ ●A [■B (Boreas) Wins]
           </text>
 
           {/* Bottom-Right Unanimous Electorate Corner */}
@@ -2570,7 +2791,7 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
             textAnchor="end"
             className="fill-indigo-400 font-bold text-xs"
           >
-            (0, 0, {n}) · Unanimous G₂: C ≻ A ≻ B [Ruling C ≻ B]
+            (0, 0, {n}) · Unanimous G₂: ▲C ≻ ●A ≻ ■B [▲C (Cybele) Wins]
           </text>
 
           {/* Left Pareto Boundary Edge (k2 = 0) */}
@@ -2674,14 +2895,25 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
                   strokeLinejoin="round"
                 />
                 {isLosing && (
-                  <text
-                    x={centroid.x}
-                    y={centroid.y + 4}
-                    textAnchor="middle"
-                    className="fill-amber-200 font-mono text-[10px] font-extrabold"
-                  >
-                    CYCLE
-                  </text>
+                  <>
+                    <text
+                      x={centroid.x}
+                      y={centroid.y - 2}
+                      textAnchor="middle"
+                      className="fill-amber-200 font-mono text-[10px] font-extrabold"
+                    >
+                      CYCLE
+                    </text>
+                    <text
+                      data-testid={`losing-triangle-dictator-${tri.id}`}
+                      x={centroid.x}
+                      y={centroid.y + 10}
+                      textAnchor="middle"
+                      className="fill-amber-100 font-mono text-[8.5px] font-black"
+                    >
+                      👑 Dictator: Voter #{getTriadPivotalVoter(graph, tri)}
+                    </text>
+                  </>
                 )}
                 {!isLosing &&
                   showPossibleDictators &&
@@ -2769,7 +3001,7 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
                       : '#475569';
 
             const nonHoveredLabel =
-              isColored && showBadgesOnNodes ? colorMeta!.shortBadge : '';
+              isColored && showBadgesOnNodes ? colorMeta!.shapedBadge : '';
 
             return (
               <g
@@ -2914,7 +3146,7 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
                         textAnchor="middle"
                         className="font-mono text-[13px] font-black fill-slate-950"
                       >
-                        {colorMeta!.shortBadge}
+                        {colorMeta!.shapedBadge}
                       </text>
                       <text
                         y={11}
@@ -2934,7 +3166,7 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
                         textAnchor="middle"
                         className="font-mono text-[13px] font-black fill-slate-950"
                       >
-                        {RULING_COLORS[activeColor].shortBadge}
+                        {RULING_COLORS[activeColor].shapedBadge}
                       </text>
                       <text
                         y={11}
@@ -3049,8 +3281,8 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
                   const warnsCycle =
                     showImpossibilityWarnings && !imp.isLocallyTransitive;
 
-                  const pillW = 140;
-                  const pillH = 44;
+                  const pillW = 168;
+                  const pillH = 54;
 
                   return (
                     <g
@@ -3076,17 +3308,24 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
                         filter="url(#hoverDropShadow)"
                       />
                       <text
-                        y={-4}
+                        y={-11}
                         textAnchor="middle"
                         className="pointer-events-none font-mono text-[11px] font-black fill-slate-950"
                       >
-                        {meta.ruling}
+                        {meta.candidateShape} {meta.ruling}
                         {warnsCycle ? ' · ⚠ CYCLE' : ''}
                       </text>
                       <text
-                        y={11}
+                        y={2}
                         textAnchor="middle"
-                        className="pointer-events-none font-mono text-[9px] font-extrabold fill-slate-950/90"
+                        className="pointer-events-none font-mono text-[9px] font-black fill-slate-950/95"
+                      >
+                        {imp.crownedWinnerShort}
+                      </text>
+                      <text
+                        y={15}
+                        textAnchor="middle"
+                        className="pointer-events-none font-mono text-[8.5px] font-extrabold fill-slate-950/90"
                       >
                         {imp.compactPillText}
                       </text>
@@ -3283,6 +3522,190 @@ export const PossibleDictatorsPanel: React.FC<PossibleDictatorsPanelProps> = ({
 
 
 /* =============================================================================
+ * FILE: src/components/VoterRosterBar.tsx
+ * ============================================================================= */
+
+import React from 'react';
+import {
+  BarycentricCoord,
+  CANDIDATES,
+  RULING_COLORS,
+  RulingColor,
+} from '../engine/barycentric';
+import {
+  buildElectorateRosterAtProfile,
+  computeFlippedVoterBetweenProfiles,
+  PossibleDictatorsAnalysis,
+  VoterDictatorStatus,
+} from '../engine/arrowProof';
+
+export interface VoterRosterBarProps {
+  readonly n: number;
+  readonly activeCoord: BarycentricCoord;
+  readonly activeCoordLabel: string;
+  readonly lastMoveCoord: BarycentricCoord | null;
+  readonly dictatorAnalysis: PossibleDictatorsAnalysis;
+  readonly hoveredDictatorId: number | null;
+  readonly onHoverDictator: (voterId: number | null) => void;
+}
+
+const CANDIDATE_KEYS: readonly RulingColor[] = [0, 1, 2];
+
+function getDictatorBadgeClass(status: VoterDictatorStatus): string {
+  switch (status) {
+    case 'unmasked':
+      return 'border-rose-500/60 bg-rose-500/25 text-rose-200 font-black animate-pulse';
+    case 'armed':
+      return 'border-amber-500/60 bg-amber-500/20 text-amber-200 font-bold';
+    case 'viable':
+      return 'border-sky-500/40 bg-sky-500/15 text-sky-200 font-semibold';
+    case 'cleared':
+      return 'border-emerald-500/40 bg-emerald-500/15 text-emerald-200 font-medium';
+  }
+}
+
+export const VoterRosterBar: React.FC<VoterRosterBarProps> = ({
+  activeCoord,
+  activeCoordLabel,
+  lastMoveCoord,
+  dictatorAnalysis,
+  hoveredDictatorId,
+  onHoverDictator,
+}) => {
+  const seats = buildElectorateRosterAtProfile(
+    activeCoord,
+    lastMoveCoord,
+    dictatorAnalysis
+  );
+  const flipped = computeFlippedVoterBetweenProfiles(
+    lastMoveCoord,
+    activeCoord
+  );
+
+  return (
+    <div
+      data-testid="voter-roster-bar"
+      className="rounded-2xl border border-slate-800/90 bg-slate-900/85 p-3.5 shadow-xl backdrop-blur-sm"
+    >
+      {/* Top Row: 3-Candidate Legend, Active Profile & Single-Voter Flip Callout */}
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          {CANDIDATE_KEYS.map((c) => {
+            const cand = CANDIDATES[c];
+            const rulingMeta = RULING_COLORS[c];
+            return (
+              <div
+                key={c}
+                data-testid={`candidate-pill-${c}`}
+                className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-mono shadow-sm"
+                style={{
+                  borderColor: `${cand.hexColor}60`,
+                  backgroundColor: `${cand.hexColor}15`,
+                  color: cand.hexColor,
+                }}
+              >
+                <span className="font-bold">{cand.fullLabel}</span>
+                <span className="text-[10px] text-slate-300">
+                  Faction {rulingMeta.coalitionBlock}: {rulingMeta.shapedCoalitionRanking}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div
+            data-testid="active-roster-profile-badge"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/90 px-2.5 py-1 font-mono text-xs text-slate-200"
+          >
+            <span className="font-semibold text-sky-300">
+              Profile ({activeCoord.join(', ')}) · {activeCoordLabel}
+            </span>
+          </div>
+
+          {flipped !== null && (
+            <div
+              data-testid="flipped-voter-callout"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/50 bg-amber-500/15 px-3 py-1 font-mono text-xs font-bold text-amber-200 animate-pulse"
+            >
+              <span>⚡ {flipped.summary}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Voter Cards Grid */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6">
+        {seats.map((seat) => {
+          const isHovered = hoveredDictatorId === seat.voterId;
+          return (
+            <div
+              key={seat.voterId}
+              data-testid={`voter-card-${seat.voterId}`}
+              data-faction={seat.blockLabel}
+              data-dictator-status={seat.dictatorStatus}
+              onMouseEnter={() => onHoverDictator(seat.voterId)}
+              onMouseLeave={() => onHoverDictator(null)}
+              className={`group relative flex flex-col justify-between rounded-xl border border-slate-800 bg-slate-950/75 p-2.5 transition-all ${
+                isHovered
+                  ? 'ring-2 ring-sky-400 bg-slate-900 shadow-lg'
+                  : 'hover:border-slate-700 hover:bg-slate-900/60'
+              } ${seat.isFlippedFromLastMove ? 'ring-1 ring-amber-400/60' : ''}`}
+              style={{ borderLeftColor: seat.hexColor, borderLeftWidth: 4 }}
+            >
+              <div>
+                <div className="mb-1.5 flex items-center justify-between gap-1">
+                  <span className="font-mono text-xs font-bold text-slate-100">
+                    {seat.fullLabel}
+                  </span>
+                  <span
+                    className="rounded px-1.5 py-0.5 font-mono text-[10px] font-bold"
+                    style={{
+                      backgroundColor: `${seat.hexColor}25`,
+                      color: seat.hexColor,
+                    }}
+                  >
+                    {seat.blockLabel}
+                  </span>
+                </div>
+
+                <div className="font-mono text-[11px] font-semibold text-slate-200">
+                  {seat.shapedRanking}
+                </div>
+
+                {seat.isFlippedFromLastMove && (
+                  <div className="mt-1.5">
+                    <span
+                      data-testid={`flipped-voter-badge-${seat.voterId}`}
+                      className="inline-flex items-center gap-1 rounded bg-amber-400 px-1.5 py-0.5 font-mono text-[9.5px] font-black text-slate-950 shadow"
+                    >
+                      ⚡ Flipped Ballot
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-2.5 border-t border-slate-800/80 pt-1.5">
+                <span
+                  data-testid={`voter-dictator-badge-${seat.voterId}`}
+                  className={`inline-block w-full text-center rounded border px-1.5 py-0.5 font-mono text-[9.5px] ${getDictatorBadgeClass(
+                    seat.dictatorStatus
+                  )}`}
+                >
+                  {seat.dictatorBadgeText}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+
+
+/* =============================================================================
  * FILE: src/engine/arrowProof.ts
  * ============================================================================= */
 
@@ -3305,8 +3728,11 @@ export const PossibleDictatorsPanel: React.FC<PossibleDictatorsPanelProps> = ({
  */
 
 import {
+  areAdjacentCoords,
   BarycentricCoord,
   ElementaryTriangle,
+  getVoterLabel,
+  getVoterName,
   isPanchromaticTriangle,
   LatticeGraph,
   RULING_COLORS,
@@ -3368,8 +3794,13 @@ export interface RulingImplication {
   readonly ruling: RulingColor;
   readonly rulingText: string;
   readonly shortBadge: string;
+  readonly shapedBadge: string;
   readonly coalitionBlock: 'G₀' | 'G₁' | 'G₂';
   readonly coalitionRanking: string;
+  readonly shapedCoalitionRanking: string;
+  readonly crownedWinnerText: string;
+  readonly crownedWinnerShort: string;
+  readonly votersEmpoweredText: string;
   readonly supportVotes: number;
   readonly opposeVotes: number;
   readonly totalVoters: number;
@@ -3385,6 +3816,38 @@ export interface RulingImplication {
   readonly triggeredTriads: readonly ElementaryTriangle[];
   readonly pivotalDictatorVoter: number | null;
   readonly primaryParadoxProof: ParadoxTriadProof | null;
+}
+
+export interface FlippedVoterTransition {
+  readonly voterId: number;
+  readonly voterLabel: string;
+  readonly fromBlock: RulingColor;
+  readonly toBlock: RulingColor;
+  readonly fromBlockLabel: 'G₀' | 'G₁' | 'G₂';
+  readonly toBlockLabel: 'G₀' | 'G₁' | 'G₂';
+  readonly fromRanking: string;
+  readonly toRanking: string;
+  readonly summary: string;
+}
+
+export interface VoterSeatCardState {
+  readonly voterId: number;
+  readonly shortId: string;
+  readonly name: string;
+  readonly fullLabel: string;
+  readonly blockIndex: RulingColor;
+  readonly blockLabel: 'G₀' | 'G₁' | 'G₂';
+  readonly shapedRanking: string;
+  readonly championedCandidate: string;
+  readonly hexColor: string;
+  readonly isFlippedFromLastMove: boolean;
+  readonly flipTransition: FlippedVoterTransition | null;
+  readonly dictatorStatus: VoterDictatorStatus;
+  readonly dictatorBadgeText:
+    | '👑 DICTATOR UNMASKED'
+    | '⚠️ ARMED DICTATOR'
+    | '🔍 SUSPECT'
+    | '✅ CLEARED';
 }
 
 export const SWF_OUTPUT_CONSTRAINTS: Record<
@@ -3424,6 +3887,127 @@ export function formatVoterRange(startVoterId: number, count: number): string {
   if (count === 1) return `{#${startVoterId}}`;
   if (count === 2) return `{#${startVoterId}, #${startVoterId + 1}}`;
   return `{#${startVoterId}..#${startVoterId + count - 1}}`;
+}
+
+/**
+ * Formats a contiguous range of 1-indexed Voter IDs as V-notation (e.g., "V1", "V2–V6").
+ */
+export function formatVoterSpanCompact(
+  startVoterId: number,
+  count: number
+): string {
+  if (count <= 0) return '∅';
+  if (count === 1) return `V${startVoterId}`;
+  return `V${startVoterId}–V${startVoterId + count - 1}`;
+}
+
+/**
+ * Formats the human-readable "Voters Empowered" string for a given profile and ruling:
+ * e.g., "Sides with V1 (1 voter) over V2–V6 (5 voters)"
+ */
+export function formatVotersEmpoweredText(
+  coord: BarycentricCoord,
+  ruling: RulingColor
+): string {
+  const [k0, k1, k2] = coord;
+  const n = k0 + k1 + k2;
+  const counts: Record<RulingColor, number> = { 0: k0, 1: k1, 2: k2 };
+  const starts: Record<RulingColor, number> = {
+    0: 1,
+    1: k0 + 1,
+    2: k0 + k1 + 1,
+  };
+
+  const supportVotes = counts[ruling];
+  const opposeVotes = n - supportVotes;
+  const supportSpan = formatVoterSpanCompact(starts[ruling], supportVotes);
+
+  // Build opposing voter spans in ascending voter order, merging contiguous blocks when possible
+  const otherBlocks = ([0, 1, 2] as const).filter(
+    (b) => b !== ruling && counts[b] > 0
+  );
+  let opposeSpan = '∅';
+  if (otherBlocks.length === 1) {
+    const b = otherBlocks[0]!;
+    opposeSpan = formatVoterSpanCompact(starts[b], counts[b]);
+  } else if (otherBlocks.length === 2) {
+    const bFirst = otherBlocks[0]!;
+    const bSecond = otherBlocks[1]!;
+    if (starts[bFirst] + counts[bFirst] === starts[bSecond]) {
+      opposeSpan = formatVoterSpanCompact(
+        starts[bFirst],
+        counts[bFirst] + counts[bSecond]
+      );
+    } else {
+      opposeSpan = `${formatVoterSpanCompact(starts[bFirst], counts[bFirst])}, ${formatVoterSpanCompact(starts[bSecond], counts[bSecond])}`;
+    }
+  }
+
+  return `Sides with ${supportSpan} (${supportVotes} voter${supportVotes === 1 ? '' : 's'}) over ${opposeSpan} (${opposeVotes} voter${opposeVotes === 1 ? '' : 's'})`;
+}
+
+/**
+ * Returns which Faction block (0: G_0, 1: G_1, 2: G_2) Voter #voterId belongs to at profile `coord`.
+ */
+export function getVoterFactionBlock(
+  coord: BarycentricCoord,
+  voterId: number
+): RulingColor {
+  const [k0, k1] = coord;
+  if (voterId <= k0) return 0;
+  if (voterId <= k0 + k1) return 1;
+  return 2;
+}
+
+/**
+ * Identifies the exact single voter who changed their ballot between two adjacent
+ * profiles `fromCoord` and `toCoord` (with lattice distance d(u, v) = 1).
+ */
+export function computeFlippedVoterBetweenProfiles(
+  fromCoord: BarycentricCoord | null,
+  toCoord: BarycentricCoord | null
+): FlippedVoterTransition | null {
+  if (!fromCoord || !toCoord || !areAdjacentCoords(fromCoord, toCoord)) {
+    return null;
+  }
+
+  const [k0_a, k1_a, k2_a] = fromCoord;
+  const [k0_b, k1_b] = toCoord;
+  const n = k0_a + k1_a + k2_a;
+
+  // Determine the canonical single voter who shifted blocks
+  let voterId: number;
+  if (k0_a !== k0_b) {
+    voterId = Math.max(k0_a, k0_b);
+  } else {
+    voterId = k0_a + Math.max(k1_a, k1_b);
+  }
+  voterId = Math.max(1, Math.min(n, voterId));
+
+  const fromBlock = getVoterFactionBlock(fromCoord, voterId);
+  let toBlock = getVoterFactionBlock(toCoord, voterId);
+  if (fromBlock === toBlock) {
+    // Direct G_0 <-> G_2 shift when k1 > 0: identify which block gained/lost a voter
+    for (const c of [0, 1, 2] as const) {
+      if (toCoord[c] > fromCoord[c]) toBlock = c;
+    }
+  }
+
+  const fromMeta = RULING_COLORS[fromBlock];
+  const toMeta = RULING_COLORS[toBlock];
+  const voterLabel = getVoterLabel(voterId);
+
+  return {
+    voterId,
+    voterLabel,
+    fromBlock,
+    toBlock,
+    fromBlockLabel: fromMeta.coalitionBlock,
+    toBlockLabel: toMeta.coalitionBlock,
+    fromRanking: fromMeta.shapedCoalitionRanking,
+    toRanking: toMeta.shapedCoalitionRanking,
+    summary: `${voterLabel} flipped ballot: ${fromMeta.coalitionBlock} (${fromMeta.shapedCoalitionRanking}) → ${toMeta.coalitionBlock} (${toMeta.shapedCoalitionRanking})`,
+  };
 }
 
 /**
@@ -3729,8 +4313,13 @@ export function evaluateRulingImplication(
     ruling,
     rulingText: meta.ruling,
     shortBadge: meta.shortBadge,
+    shapedBadge: meta.shapedBadge,
     coalitionBlock: meta.coalitionBlock,
     coalitionRanking: meta.coalitionRanking,
+    shapedCoalitionRanking: meta.shapedCoalitionRanking,
+    crownedWinnerText: meta.crownedWinnerText,
+    crownedWinnerShort: meta.crownedWinnerShort,
+    votersEmpoweredText: formatVotersEmpoweredText(vertex.coord, ruling),
     supportVotes,
     opposeVotes,
     totalVoters: graph.n,
@@ -4078,6 +4667,66 @@ export function analyzePossibleDictators(
   };
 }
 
+/**
+ * Builds the complete n-voter Senate Roster for the active/hovered profile `coord`,
+ * combining each voter's Faction block, ballot, single-voter shift flip status from `lastMoveCoord`,
+ * and live Dictator status from `dictatorAnalysis`.
+ */
+export function buildElectorateRosterAtProfile(
+  coord: BarycentricCoord,
+  lastMoveCoord: BarycentricCoord | null,
+  dictatorAnalysis: PossibleDictatorsAnalysis | null
+): readonly VoterSeatCardState[] {
+  const n = coord[0] + coord[1] + coord[2];
+  const flipTransition = computeFlippedVoterBetweenProfiles(lastMoveCoord, coord);
+
+  const summaryByVoter = new Map<number, VoterDictatorSummary>();
+  if (dictatorAnalysis) {
+    for (const s of dictatorAnalysis.voterSummaries) {
+      summaryByVoter.set(s.voterId, s);
+    }
+  }
+
+  const seats: VoterSeatCardState[] = [];
+  for (let voterId = 1; voterId <= n; voterId++) {
+    const blockIndex = getVoterFactionBlock(coord, voterId);
+    const meta = RULING_COLORS[blockIndex];
+    const summary = summaryByVoter.get(voterId);
+    const dictatorStatus: VoterDictatorStatus = summary?.status ?? 'viable';
+
+    let dictatorBadgeText: VoterSeatCardState['dictatorBadgeText'];
+    if (dictatorStatus === 'unmasked') {
+      dictatorBadgeText = '👑 DICTATOR UNMASKED';
+    } else if (dictatorStatus === 'armed') {
+      dictatorBadgeText = '⚠️ ARMED DICTATOR';
+    } else if (dictatorStatus === 'cleared') {
+      dictatorBadgeText = '✅ CLEARED';
+    } else {
+      dictatorBadgeText = '🔍 SUSPECT';
+    }
+
+    const isFlippedFromLastMove = flipTransition?.voterId === voterId;
+
+    seats.push({
+      voterId,
+      shortId: `V${voterId}`,
+      name: getVoterName(voterId),
+      fullLabel: getVoterLabel(voterId),
+      blockIndex,
+      blockLabel: meta.coalitionBlock,
+      shapedRanking: meta.shapedCoalitionRanking,
+      championedCandidate: meta.candidateFullLabel,
+      hexColor: meta.hexFill,
+      isFlippedFromLastMove,
+      flipTransition: isFlippedFromLastMove ? flipTransition : null,
+      dictatorStatus,
+      dictatorBadgeText,
+    });
+  }
+
+  return seats;
+}
+
 
 
 /* =============================================================================
@@ -4105,13 +4754,90 @@ export type RulingColor = 0 | 1 | 2;
 export type BarycentricCoord = readonly [number, number, number];
 export type VertexId = string;
 
+export interface CandidateMetadata {
+  readonly id: 'A' | 'B' | 'C';
+  readonly name: 'Atlas' | 'Boreas' | 'Cybele';
+  readonly shape: '●' | '■' | '▲';
+  readonly shortTag: '●A' | '■B' | '▲C';
+  readonly fullLabel: '●A (Atlas)' | '■B (Boreas)' | '▲C (Cybele)';
+  readonly hexColor: string;
+}
+
+export const CANDIDATES: Record<RulingColor, CandidateMetadata> = {
+  0: {
+    id: 'A',
+    name: 'Atlas',
+    shape: '●',
+    shortTag: '●A',
+    fullLabel: '●A (Atlas)',
+    hexColor: '#f43f5e',
+  },
+  1: {
+    id: 'B',
+    name: 'Boreas',
+    shape: '■',
+    shortTag: '■B',
+    fullLabel: '■B (Boreas)',
+    hexColor: '#10b981',
+  },
+  2: {
+    id: 'C',
+    name: 'Cybele',
+    shape: '▲',
+    shortTag: '▲C',
+    fullLabel: '▲C (Cybele)',
+    hexColor: '#6366f1',
+  },
+};
+
+export const VOTER_NAMES: readonly string[] = [
+  'Ada',
+  'Blaise',
+  'Condorcet',
+  'Dodgson',
+  'Emmy',
+  'Kenneth',
+  'Leonhard',
+  'Maskin',
+  'Nash',
+  'Pareto',
+  'Sen',
+  'Sperner',
+] as const;
+
+export function getVoterName(voterId: number): string {
+  return VOTER_NAMES[voterId - 1] ?? `Voter ${voterId}`;
+}
+
+export function getVoterLabel(voterId: number): string {
+  return `V${voterId} · ${getVoterName(voterId)}`;
+}
+
 export interface ColorMetadata {
   readonly color: RulingColor;
   readonly name: string;
   readonly ruling: string;
   readonly shortBadge: string;
+  readonly candidateId: 'A' | 'B' | 'C';
+  readonly candidateName: 'Atlas' | 'Boreas' | 'Cybele';
+  readonly candidateShape: '●' | '■' | '▲';
+  readonly candidateFullLabel: '●A (Atlas)' | '■B (Boreas)' | '▲C (Cybele)';
+  readonly shapedRuling: '●A ≻ ▲C' | '■B ≻ ●A' | '▲C ≻ ■B';
+  readonly shapedBadge: '● A≻C' | '■ B≻A' | '▲ C≻B';
   readonly coalitionBlock: 'G₀' | 'G₁' | 'G₂';
   readonly coalitionRanking: string;
+  readonly shapedCoalitionRanking:
+    | '●A ≻ ■B ≻ ▲C'
+    | '■B ≻ ▲C ≻ ●A'
+    | '▲C ≻ ●A ≻ ■B';
+  readonly crownedWinnerText:
+    | 'Cuts ▲C≻●A → ●A (Atlas) Wins'
+    | 'Cuts ●A≻■B → ■B (Boreas) Wins'
+    | 'Cuts ■B≻▲C → ▲C (Cybele) Wins';
+  readonly crownedWinnerShort:
+    | '●A (Atlas) Wins'
+    | '■B (Boreas) Wins'
+    | '▲C (Cybele) Wins';
   readonly forbiddenAxis: 0 | 1 | 2;
   readonly unanimousConstraint: string;
   readonly hexFill: string;
@@ -4124,8 +4850,17 @@ export const RULING_COLORS: Record<RulingColor, ColorMetadata> = {
     name: 'Ruling A ≻ C',
     ruling: 'A ≻ C',
     shortBadge: 'A≻C',
+    candidateId: 'A',
+    candidateName: 'Atlas',
+    candidateShape: '●',
+    candidateFullLabel: '●A (Atlas)',
+    shapedRuling: '●A ≻ ▲C',
+    shapedBadge: '● A≻C',
     coalitionBlock: 'G₀',
     coalitionRanking: 'A ≻ B ≻ C',
+    shapedCoalitionRanking: '●A ≻ ■B ≻ ▲C',
+    crownedWinnerText: 'Cuts ▲C≻●A → ●A (Atlas) Wins',
+    crownedWinnerShort: '●A (Atlas) Wins',
     forbiddenAxis: 0,
     unanimousConstraint: 'Pareto Forbids on k₀ = 0 (Unanimous C ≻ A)',
     hexFill: '#f43f5e',
@@ -4136,8 +4871,17 @@ export const RULING_COLORS: Record<RulingColor, ColorMetadata> = {
     name: 'Ruling B ≻ A',
     ruling: 'B ≻ A',
     shortBadge: 'B≻A',
+    candidateId: 'B',
+    candidateName: 'Boreas',
+    candidateShape: '■',
+    candidateFullLabel: '■B (Boreas)',
+    shapedRuling: '■B ≻ ●A',
+    shapedBadge: '■ B≻A',
     coalitionBlock: 'G₁',
     coalitionRanking: 'B ≻ C ≻ A',
+    shapedCoalitionRanking: '■B ≻ ▲C ≻ ●A',
+    crownedWinnerText: 'Cuts ●A≻■B → ■B (Boreas) Wins',
+    crownedWinnerShort: '■B (Boreas) Wins',
     forbiddenAxis: 1,
     unanimousConstraint: 'Pareto Forbids on k₁ = 0 (Unanimous A ≻ B)',
     hexFill: '#10b981',
@@ -4148,8 +4892,17 @@ export const RULING_COLORS: Record<RulingColor, ColorMetadata> = {
     name: 'Ruling C ≻ B',
     ruling: 'C ≻ B',
     shortBadge: 'C≻B',
+    candidateId: 'C',
+    candidateName: 'Cybele',
+    candidateShape: '▲',
+    candidateFullLabel: '▲C (Cybele)',
+    shapedRuling: '▲C ≻ ■B',
+    shapedBadge: '▲ C≻B',
     coalitionBlock: 'G₂',
     coalitionRanking: 'C ≻ A ≻ B',
+    shapedCoalitionRanking: '▲C ≻ ●A ≻ ■B',
+    crownedWinnerText: 'Cuts ■B≻▲C → ▲C (Cybele) Wins',
+    crownedWinnerShort: '▲C (Cybele) Wins',
     forbiddenAxis: 2,
     unanimousConstraint: 'Pareto Forbids on k₂ = 0 (Unanimous B ≻ C)',
     hexFill: '#6366f1',

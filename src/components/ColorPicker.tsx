@@ -111,6 +111,25 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         </div>
       </div>
 
+      {/* Dynamic Election Deadlock Case Banner */}
+      {inspectedCoord !== null && inspectedIsUnadjudicated && (() => {
+        const [k0, k1, k2] = inspectedCoord;
+        const n = k0 + k1 + k2;
+        return (
+          <div
+            data-testid="election-deadlock-case-banner"
+            className="mb-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-100"
+          >
+            <div className="font-semibold text-amber-200">
+              The Problem: At ({k0}, {k1}, {k2}), the {n} voters are locked in a circular tie (●A ≻ ■B ≻ ▲C ≻ ●A) because two factions always team up against the third ({k0 + k2} voters want ●A ≻ ■B, {k0 + k1} want ■B ≻ ▲C, {k1 + k2} want ▲C ≻ ●A).
+            </div>
+            <div className="mt-1 text-slate-300">
+              Your Job as Constitutional Architect: Pick which link of the cycle to overturn (and which Faction of voters gets to win this election) without contradicting a neighboring election where only 1 voter changed their mind!
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
         {COLOR_LIST.map((c) => {
           const meta = RULING_COLORS[c];
@@ -147,15 +166,15 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
               }`}
             >
               <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-start gap-2.5">
                   <span
-                    className="flex h-8 w-11 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-black text-slate-950 shadow-sm"
+                    className="flex h-8 w-14 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-black text-slate-950 shadow-sm"
                     style={{
                       backgroundColor: meta.hexFill,
                       boxShadow: `0 0 12px ${meta.hexFill}66`,
                     }}
                   >
-                    {meta.shortBadge}
+                    {meta.shapedBadge}
                   </span>
                   <div>
                     <div className="flex items-center gap-1.5">
@@ -163,9 +182,15 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                         Ruling {meta.ruling}
                       </span>
                     </div>
-                    <span className="text-[11px] font-medium text-slate-400">
+                    <div className="text-[11px] font-medium text-slate-400">
                       Empowers {meta.coalitionBlock} ({meta.coalitionRanking})
-                    </span>
+                    </div>
+                    <div
+                      data-testid={`crowned-winner-${c}`}
+                      className="mt-0.5 text-[11px] font-bold text-amber-300"
+                    >
+                      {meta.crownedWinnerText}
+                    </div>
                   </div>
                 </div>
 
@@ -186,6 +211,12 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                   data-testid={`ruling-implication-${c}`}
                   className="mt-2.5 space-y-1.5 border-t border-slate-800/90 pt-2 text-[11px]"
                 >
+                  <div
+                    data-testid={`voters-empowered-${c}`}
+                    className="font-mono font-medium text-slate-300"
+                  >
+                    {imp.votersEmpoweredText}
+                  </div>
                   <div className="flex flex-wrap items-center justify-between gap-1">
                     <span className="font-mono font-semibold text-slate-200">
                       Empowers {imp.coalitionBlock} {imp.voterRangeLabel} ({imp.splitLabel})

@@ -7,6 +7,7 @@ import {
 } from '../engine/barycentric';
 import {
   evaluateAllRulingsAtVertex,
+  getTriadPivotalVoter,
   PossibleDictatorsAnalysis,
 } from '../engine/arrowProof';
 import { GameState } from '../engine/gameState';
@@ -243,7 +244,7 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
             textAnchor="middle"
             className="fill-rose-400 font-bold text-xs"
           >
-            ({n}, 0, 0) · Unanimous G₀: A ≻ B ≻ C [Ruling A ≻ C]
+            ({n}, 0, 0) · Unanimous G₀: ●A ≻ ■B ≻ ▲C [●A (Atlas) Wins]
           </text>
 
           {/* Bottom-Left Unanimous Electorate Corner */}
@@ -253,7 +254,7 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
             textAnchor="start"
             className="fill-emerald-400 font-bold text-xs"
           >
-            (0, {n}, 0) · Unanimous G₁: B ≻ C ≻ A [Ruling B ≻ A]
+            (0, {n}, 0) · Unanimous G₁: ■B ≻ ▲C ≻ ●A [■B (Boreas) Wins]
           </text>
 
           {/* Bottom-Right Unanimous Electorate Corner */}
@@ -263,7 +264,7 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
             textAnchor="end"
             className="fill-indigo-400 font-bold text-xs"
           >
-            (0, 0, {n}) · Unanimous G₂: C ≻ A ≻ B [Ruling C ≻ B]
+            (0, 0, {n}) · Unanimous G₂: ▲C ≻ ●A ≻ ■B [▲C (Cybele) Wins]
           </text>
 
           {/* Left Pareto Boundary Edge (k2 = 0) */}
@@ -367,14 +368,25 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
                   strokeLinejoin="round"
                 />
                 {isLosing && (
-                  <text
-                    x={centroid.x}
-                    y={centroid.y + 4}
-                    textAnchor="middle"
-                    className="fill-amber-200 font-mono text-[10px] font-extrabold"
-                  >
-                    CYCLE
-                  </text>
+                  <>
+                    <text
+                      x={centroid.x}
+                      y={centroid.y - 2}
+                      textAnchor="middle"
+                      className="fill-amber-200 font-mono text-[10px] font-extrabold"
+                    >
+                      CYCLE
+                    </text>
+                    <text
+                      data-testid={`losing-triangle-dictator-${tri.id}`}
+                      x={centroid.x}
+                      y={centroid.y + 10}
+                      textAnchor="middle"
+                      className="fill-amber-100 font-mono text-[8.5px] font-black"
+                    >
+                      👑 Dictator: Voter #{getTriadPivotalVoter(graph, tri)}
+                    </text>
+                  </>
                 )}
                 {!isLosing &&
                   showPossibleDictators &&
@@ -462,7 +474,7 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
                       : '#475569';
 
             const nonHoveredLabel =
-              isColored && showBadgesOnNodes ? colorMeta!.shortBadge : '';
+              isColored && showBadgesOnNodes ? colorMeta!.shapedBadge : '';
 
             return (
               <g
@@ -607,7 +619,7 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
                         textAnchor="middle"
                         className="font-mono text-[13px] font-black fill-slate-950"
                       >
-                        {colorMeta!.shortBadge}
+                        {colorMeta!.shapedBadge}
                       </text>
                       <text
                         y={11}
@@ -627,7 +639,7 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
                         textAnchor="middle"
                         className="font-mono text-[13px] font-black fill-slate-950"
                       >
-                        {RULING_COLORS[activeColor].shortBadge}
+                        {RULING_COLORS[activeColor].shapedBadge}
                       </text>
                       <text
                         y={11}
@@ -742,8 +754,8 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
                   const warnsCycle =
                     showImpossibilityWarnings && !imp.isLocallyTransitive;
 
-                  const pillW = 140;
-                  const pillH = 44;
+                  const pillW = 168;
+                  const pillH = 54;
 
                   return (
                     <g
@@ -769,17 +781,24 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
                         filter="url(#hoverDropShadow)"
                       />
                       <text
-                        y={-4}
+                        y={-11}
                         textAnchor="middle"
                         className="pointer-events-none font-mono text-[11px] font-black fill-slate-950"
                       >
-                        {meta.ruling}
+                        {meta.candidateShape} {meta.ruling}
                         {warnsCycle ? ' · ⚠ CYCLE' : ''}
                       </text>
                       <text
-                        y={11}
+                        y={2}
                         textAnchor="middle"
-                        className="pointer-events-none font-mono text-[9px] font-extrabold fill-slate-950/90"
+                        className="pointer-events-none font-mono text-[9px] font-black fill-slate-950/95"
+                      >
+                        {imp.crownedWinnerShort}
+                      </text>
+                      <text
+                        y={15}
+                        textAnchor="middle"
+                        className="pointer-events-none font-mono text-[8.5px] font-extrabold fill-slate-950/90"
                       >
                         {imp.compactPillText}
                       </text>

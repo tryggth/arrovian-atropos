@@ -1,6 +1,6 @@
 # SPEC: Arrovian Atropos PWA (Progressive Web App)
 
-- **Document Version**: `0.2.3`
+- **Document Version**: `0.3.0-alpha`
 - **Target Agent**: `agy` (Google Antigravity CLI)
 - **Source of Truth Notebook**: `Hidden Dictator Game` (`notebooks/2b675003-edce-43bf-91cd-5d0ee2c33f77`)
 
@@ -15,6 +15,20 @@
 - **Gameplay ("The Constitutional Architect's Dilemma")**:
   - The user acts as the **Constitutional Architect** stepping from profile to profile via **Single-Voter Shifts ($k=1$)**, trying to adjudicate as many divided preference profiles as possible without triggering a Condorcet Paradox or unmasking a Hidden Dictator.
   - Because Arrow's Theorem guarantees the puzzle has **no complete solution** (0% survival rate at 100% completion), the player experiences Arrow's Impossibility Theorem firsthand as safe rulings narrow down until a final profile forces a Dictator/Paradox under all 3 choices.
+
+### 1.2 Concrete 3-Candidate & 6-Voter Senate Visualization (`v0.3.0-alpha`)
+To make it immediately obvious **WHO** the 3 candidates and $n=6$ voters are, **WHAT** circular deadlock is occurring at the selected node, **WHY** the Architect must rule, and **WHICH** voter is the Dictator:
+1. **Concrete 3-Candidate System (Shape + Color + Name + Cycle-Breaking Meaning)**:
+   - **Candidate A (`● Atlas` — Crimson Circle `#f43f5e`)**: Championed by Faction $G_0$ (`●A ≻ ■B ≻ ▲C`). Ruling `●A ≻ ▲C` breaks the cycle (`Cuts ▲C≻●A → ●A (Atlas) Wins`).
+   - **Candidate B (`■ Boreas` — Emerald Square `#10b981`)**: Championed by Faction $G_1$ (`■B ≻ ▲C ≻ ●A`). Ruling `■B ≻ ●A` breaks the cycle (`Cuts ●A≻■B → ■B (Boreas) Wins`).
+   - **Candidate C (`▲ Cybele` — Indigo Triangle `#6366f1`)**: Championed by Faction $G_2$ (`▲C ≻ ●A ≻ ■B`). Ruling `▲C ≻ ■B` breaks the cycle (`Cuts ■B≻▲C → ▲C (Cybele) Wins`).
+   - Colored lattice nodes and radial choice pills render the geometric shape (`●`, `■`, `▲`) alongside the pairwise ruling.
+2. **On-Board 6-Voter Senate Roster & Live Dictator Identification (`VoterRosterBar.tsx` + `LatticeBoard.tsx`)**:
+   - Displays the $n$ individual voters directly above the board (`V1 · Ada`, `V2 · Blaise`, `V3 · Condorcet`, `V4 · Dodgson`, `V5 · Emmy`, `V6 · Kenneth` for $n=6$; up to $n=12$).
+   - Color-codes each Voter Card by their Faction block ($G_0, G_1, G_2$) at the active/hovered profile $(k_0, k_1, k_2)$ and badges the exact voter who flipped their ballot (`⚡ Flipped Ballot`) when $d(u, v) = 1$ from `lastMove`.
+   - Displays live Dictator status on each Voter Card (`⚠️ ARMED DICTATOR`, `🔍 SUSPECT`, `✅ CLEARED`, and `👑 DICTATOR UNMASKED` at game over) and labels `👑 Dictator: Voter #d` directly on the losing triangle on the SVG board.
+3. **"Why You Must Rule" Election Deadlock Case Prompt (`ColorPicker.tsx`)**:
+   - Displays a 2-line **"Election Deadlock Case"** summary banner above the 3 ruling cards when inspecting an open interior node (`The Problem` + `Your Job as Constitutional Architect`), and shows **Crowned Winner** + **Voters Empowered** (`Sides with V1 (1 voter) over V2–V6 (5 voters)`) on each Ruling Card and Radial Option.
 
 ---
 

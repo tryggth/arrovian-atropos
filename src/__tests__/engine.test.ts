@@ -5,9 +5,12 @@ import App from '../App';
 import { DEFAULT_APP_VERSION } from '../hooks/useAppUpdate';
 import {
   BOARD_SIZES,
+  CANDIDATES,
   createLatticeGraph,
   findAllPanchromaticTriangles,
   generateBoundaryColoring,
+  getVoterLabel,
+  getVoterName,
   latticeDistance,
   RulingColor,
   toVertexId,
@@ -19,7 +22,9 @@ import {
 } from '../engine/gameState';
 import {
   analyzePossibleDictators,
+  buildElectorateRosterAtProfile,
   classifyPowerDynamics,
+  computeFlippedVoterBetweenProfiles,
   computePairwiseTallies,
   computePivotalVoterIndex,
   computeVoterBlockPartitions,
@@ -27,6 +32,7 @@ import {
   evaluateRulingImplication,
   extractParadoxTriadProof,
   formatVoterRange,
+  formatVotersEmpoweredText,
   getTriadPivotalVoter,
 } from '../engine/arrowProof';
 import { createSeededRNG } from '../engine/prng';
@@ -402,6 +408,70 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       expect(threat?.safeRulings).not.toContain(2);
       expect(threat?.lethalRulings.get(2)).toContain(3);
     });
+
+    it('verifies CANDIDATES metadata, getVoterLabel, computeFlippedVoterBetweenProfiles, formatVotersEmpoweredText, and buildElectorateRosterAtProfile', () => {
+      // 1. CANDIDATES metadata
+      expect(CANDIDATES[0].fullLabel).toBe('●A (Atlas)');
+      expect(CANDIDATES[0].shape).toBe('●');
+      expect(CANDIDATES[0].hexColor).toBe('#f43f5e');
+      expect(CANDIDATES[1].fullLabel).toBe('■B (Boreas)');
+      expect(CANDIDATES[1].shape).toBe('■');
+      expect(CANDIDATES[1].hexColor).toBe('#10b981');
+      expect(CANDIDATES[2].fullLabel).toBe('▲C (Cybele)');
+      expect(CANDIDATES[2].shape).toBe('▲');
+      expect(CANDIDATES[2].hexColor).toBe('#6366f1');
+
+      // 2. getVoterLabel & getVoterName
+      expect(getVoterName(1)).toBe('Ada');
+      expect(getVoterLabel(1)).toBe('V1 · Ada');
+      expect(getVoterName(2)).toBe('Blaise');
+      expect(getVoterLabel(2)).toBe('V2 · Blaise');
+      expect(getVoterName(6)).toBe('Kenneth');
+      expect(getVoterLabel(6)).toBe('V6 · Kenneth');
+
+      // 3. computeFlippedVoterBetweenProfiles
+      const flip = computeFlippedVoterBetweenProfiles([2, 2, 2], [1, 3, 2]);
+      expect(flip).not.toBeNull();
+      expect(flip?.voterId).toBe(2);
+      expect(flip?.voterLabel).toBe('V2 · Blaise');
+      expect(flip?.fromBlockLabel).toBe('G₀');
+      expect(flip?.toBlockLabel).toBe('G₁');
+      expect(flip?.summary).toContain('V2 · Blaise flipped ballot');
+
+      // Non-adjacent or null profiles
+      expect(computeFlippedVoterBetweenProfiles([2, 2, 2], [4, 1, 1])).toBeNull();
+      expect(computeFlippedVoterBetweenProfiles(null, [2, 2, 2])).toBeNull();
+
+      // 4. formatVotersEmpoweredText
+      expect(formatVotersEmpoweredText([2, 2, 2], 0)).toBe(
+        'Sides with V1–V2 (2 voters) over V3–V6 (4 voters)'
+      );
+      expect(formatVotersEmpoweredText([1, 3, 2], 0)).toBe(
+        'Sides with V1 (1 voter) over V2–V6 (5 voters)'
+      );
+
+      // 5. buildElectorateRosterAtProfile
+      const graph = createLatticeGraph(6);
+      const colors = generateBoundaryColoring(graph, 'arrow-1951');
+      const analysis = analyzePossibleDictators(graph, colors);
+      const seats = buildElectorateRosterAtProfile([2, 2, 2], null, analysis);
+      expect(seats.length).toBe(6);
+      expect(seats[0].fullLabel).toBe('V1 · Ada');
+      expect(seats[0].blockLabel).toBe('G₀');
+      expect(seats[0].shapedRanking).toBe('●A ≻ ■B ≻ ▲C');
+      expect(seats[0].championedCandidate).toBe('●A (Atlas)');
+      expect(seats[2].fullLabel).toBe('V3 · Condorcet');
+      expect(seats[2].blockLabel).toBe('G₁');
+      expect(seats[2].shapedRanking).toBe('■B ≻ ▲C ≻ ●A');
+      expect(seats[4].fullLabel).toBe('V5 · Emmy');
+      expect(seats[4].blockLabel).toBe('G₂');
+      expect(seats[4].shapedRanking).toBe('▲C ≻ ●A ≻ ■B');
+
+      // Check flipped flag when lastMove is adjacent
+      const adjacentSeats = buildElectorateRosterAtProfile([1, 3, 2], [2, 2, 2], analysis);
+      expect(adjacentSeats[1].isFlippedFromLastMove).toBe(true);
+      expect(adjacentSeats[0].isFlippedFromLastMove).toBe(false);
+    });
   });
 
   describe('6. Interactive SVG Simplex UI, Constitutional Architect Mode & Arrow Terminology (v0.2.0)', () => {
@@ -565,6 +635,81 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       // Clicking again hides the panel
       fireEvent.click(toggleBtn);
       expect(screen.queryByTestId('possible-dictators-panel')).toBeNull();
+    });
+
+    it('renders the concrete 6-voter roster bar with candidate pills and live dictator badges, displays election deadlock case banner, crowned winner, and voters empowered on selection, and displays flipped ballot on adjacent hover', () => {
+      render(React.createElement(App));
+
+      // 1. Verify voter-roster-bar is rendered with candidate pills
+      const rosterBar = screen.getByTestId('voter-roster-bar');
+      expect(rosterBar).toBeDefined();
+
+      expect(screen.getByTestId('candidate-pill-0').textContent).toContain(
+        '●A (Atlas)'
+      );
+      expect(screen.getByTestId('candidate-pill-1').textContent).toContain(
+        '■B (Boreas)'
+      );
+      expect(screen.getByTestId('candidate-pill-2').textContent).toContain(
+        '▲C (Cybele)'
+      );
+
+      // Verify Voters V1 through V6
+      expect(screen.getByTestId('voter-card-1').textContent).toContain('V1 · Ada');
+      expect(screen.getByTestId('voter-card-2').textContent).toContain('V2 · Blaise');
+      expect(screen.getByTestId('voter-card-3').textContent).toContain('V3 · Condorcet');
+      expect(screen.getByTestId('voter-card-4').textContent).toContain('V4 · Dodgson');
+      expect(screen.getByTestId('voter-card-5').textContent).toContain('V5 · Emmy');
+      expect(screen.getByTestId('voter-card-6').textContent).toContain('V6 · Kenneth');
+
+      // Verify live Dictator status badges (ARMED / SUSPECT / CLEARED)
+      const badgeTexts = [1, 2, 3, 4, 5, 6].map(
+        (id) => screen.getByTestId(`voter-dictator-badge-${id}`).textContent
+      );
+      expect(
+        badgeTexts.some(
+          (t) =>
+            t?.includes('⚠️ ARMED DICTATOR') ||
+            t?.includes('🔍 SUSPECT') ||
+            t?.includes('✅ CLEARED')
+        )
+      ).toBe(true);
+
+      // 2. Select (2,2,2)
+      const centerNode = screen.getByTestId('vertex-2,2,2');
+      fireEvent.click(centerNode);
+
+      // Election Deadlock Case Banner renders
+      const deadlockBanner = screen.getByTestId('election-deadlock-case-banner');
+      expect(deadlockBanner).toBeDefined();
+      expect(deadlockBanner.textContent).toContain('The Problem: At (2, 2, 2)');
+      expect(deadlockBanner.textContent).toContain('Your Job as Constitutional Architect');
+
+      // Crowned Winner and Voters Empowered
+      const crowned0 = screen.getByTestId('crowned-winner-0');
+      expect(crowned0.textContent).toContain('Cuts ▲C≻●A → ●A (Atlas) Wins');
+
+      const empowered0 = screen.getByTestId('voters-empowered-0');
+      expect(empowered0.textContent).toContain(
+        'Sides with V1–V2 (2 voters) over V3–V6 (4 voters)'
+      );
+
+      // 3. Commit move at (2,2,2) with ruling 0
+      const radialOption0 = screen.getByTestId('radial-color-option-0');
+      fireEvent.click(radialOption0);
+
+      // Now lastMove is (2,2,2). Hover adjacent node (1,3,2)
+      const adjacentNode = screen.getByTestId('vertex-1,3,2');
+      fireEvent.mouseEnter(adjacentNode);
+
+      // Flipped ballot badge appears on V2 · Blaise
+      const flippedBadge2 = screen.getByTestId('flipped-voter-badge-2');
+      expect(flippedBadge2).toBeDefined();
+      expect(flippedBadge2.textContent).toContain('⚡ Flipped Ballot');
+      expect(screen.getByTestId('voter-card-2').textContent).toContain('V2 · Blaise');
+
+      const flipCallout = screen.getByTestId('flipped-voter-callout');
+      expect(flipCallout.textContent).toContain('V2 · Blaise flipped ballot');
     });
   });
 });

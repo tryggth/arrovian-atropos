@@ -17,8 +17,11 @@
  */
 
 import {
+  areAdjacentCoords,
   BarycentricCoord,
   ElementaryTriangle,
+  getVoterLabel,
+  getVoterName,
   isPanchromaticTriangle,
   LatticeGraph,
   RULING_COLORS,
@@ -80,8 +83,13 @@ export interface RulingImplication {
   readonly ruling: RulingColor;
   readonly rulingText: string;
   readonly shortBadge: string;
+  readonly shapedBadge: string;
   readonly coalitionBlock: 'G₀' | 'G₁' | 'G₂';
   readonly coalitionRanking: string;
+  readonly shapedCoalitionRanking: string;
+  readonly crownedWinnerText: string;
+  readonly crownedWinnerShort: string;
+  readonly votersEmpoweredText: string;
   readonly supportVotes: number;
   readonly opposeVotes: number;
   readonly totalVoters: number;
@@ -97,6 +105,38 @@ export interface RulingImplication {
   readonly triggeredTriads: readonly ElementaryTriangle[];
   readonly pivotalDictatorVoter: number | null;
   readonly primaryParadoxProof: ParadoxTriadProof | null;
+}
+
+export interface FlippedVoterTransition {
+  readonly voterId: number;
+  readonly voterLabel: string;
+  readonly fromBlock: RulingColor;
+  readonly toBlock: RulingColor;
+  readonly fromBlockLabel: 'G₀' | 'G₁' | 'G₂';
+  readonly toBlockLabel: 'G₀' | 'G₁' | 'G₂';
+  readonly fromRanking: string;
+  readonly toRanking: string;
+  readonly summary: string;
+}
+
+export interface VoterSeatCardState {
+  readonly voterId: number;
+  readonly shortId: string;
+  readonly name: string;
+  readonly fullLabel: string;
+  readonly blockIndex: RulingColor;
+  readonly blockLabel: 'G₀' | 'G₁' | 'G₂';
+  readonly shapedRanking: string;
+  readonly championedCandidate: string;
+  readonly hexColor: string;
+  readonly isFlippedFromLastMove: boolean;
+  readonly flipTransition: FlippedVoterTransition | null;
+  readonly dictatorStatus: VoterDictatorStatus;
+  readonly dictatorBadgeText:
+    | '👑 DICTATOR UNMASKED'
+    | '⚠️ ARMED DICTATOR'
+    | '🔍 SUSPECT'
+    | '✅ CLEARED';
 }
 
 export const SWF_OUTPUT_CONSTRAINTS: Record<
@@ -136,6 +176,127 @@ export function formatVoterRange(startVoterId: number, count: number): string {
   if (count === 1) return `{#${startVoterId}}`;
   if (count === 2) return `{#${startVoterId}, #${startVoterId + 1}}`;
   return `{#${startVoterId}..#${startVoterId + count - 1}}`;
+}
+
+/**
+ * Formats a contiguous range of 1-indexed Voter IDs as V-notation (e.g., "V1", "V2–V6").
+ */
+export function formatVoterSpanCompact(
+  startVoterId: number,
+  count: number
+): string {
+  if (count <= 0) return '∅';
+  if (count === 1) return `V${startVoterId}`;
+  return `V${startVoterId}–V${startVoterId + count - 1}`;
+}
+
+/**
+ * Formats the human-readable "Voters Empowered" string for a given profile and ruling:
+ * e.g., "Sides with V1 (1 voter) over V2–V6 (5 voters)"
+ */
+export function formatVotersEmpoweredText(
+  coord: BarycentricCoord,
+  ruling: RulingColor
+): string {
+  const [k0, k1, k2] = coord;
+  const n = k0 + k1 + k2;
+  const counts: Record<RulingColor, number> = { 0: k0, 1: k1, 2: k2 };
+  const starts: Record<RulingColor, number> = {
+    0: 1,
+    1: k0 + 1,
+    2: k0 + k1 + 1,
+  };
+
+  const supportVotes = counts[ruling];
+  const opposeVotes = n - supportVotes;
+  const supportSpan = formatVoterSpanCompact(starts[ruling], supportVotes);
+
+  // Build opposing voter spans in ascending voter order, merging contiguous blocks when possible
+  const otherBlocks = ([0, 1, 2] as const).filter(
+    (b) => b !== ruling && counts[b] > 0
+  );
+  let opposeSpan = '∅';
+  if (otherBlocks.length === 1) {
+    const b = otherBlocks[0]!;
+    opposeSpan = formatVoterSpanCompact(starts[b], counts[b]);
+  } else if (otherBlocks.length === 2) {
+    const bFirst = otherBlocks[0]!;
+    const bSecond = otherBlocks[1]!;
+    if (starts[bFirst] + counts[bFirst] === starts[bSecond]) {
+      opposeSpan = formatVoterSpanCompact(
+        starts[bFirst],
+        counts[bFirst] + counts[bSecond]
+      );
+    } else {
+      opposeSpan = `${formatVoterSpanCompact(starts[bFirst], counts[bFirst])}, ${formatVoterSpanCompact(starts[bSecond], counts[bSecond])}`;
+    }
+  }
+
+  return `Sides with ${supportSpan} (${supportVotes} voter${supportVotes === 1 ? '' : 's'}) over ${opposeSpan} (${opposeVotes} voter${opposeVotes === 1 ? '' : 's'})`;
+}
+
+/**
+ * Returns which Faction block (0: G_0, 1: G_1, 2: G_2) Voter #voterId belongs to at profile `coord`.
+ */
+export function getVoterFactionBlock(
+  coord: BarycentricCoord,
+  voterId: number
+): RulingColor {
+  const [k0, k1] = coord;
+  if (voterId <= k0) return 0;
+  if (voterId <= k0 + k1) return 1;
+  return 2;
+}
+
+/**
+ * Identifies the exact single voter who changed their ballot between two adjacent
+ * profiles `fromCoord` and `toCoord` (with lattice distance d(u, v) = 1).
+ */
+export function computeFlippedVoterBetweenProfiles(
+  fromCoord: BarycentricCoord | null,
+  toCoord: BarycentricCoord | null
+): FlippedVoterTransition | null {
+  if (!fromCoord || !toCoord || !areAdjacentCoords(fromCoord, toCoord)) {
+    return null;
+  }
+
+  const [k0_a, k1_a, k2_a] = fromCoord;
+  const [k0_b, k1_b] = toCoord;
+  const n = k0_a + k1_a + k2_a;
+
+  // Determine the canonical single voter who shifted blocks
+  let voterId: number;
+  if (k0_a !== k0_b) {
+    voterId = Math.max(k0_a, k0_b);
+  } else {
+    voterId = k0_a + Math.max(k1_a, k1_b);
+  }
+  voterId = Math.max(1, Math.min(n, voterId));
+
+  const fromBlock = getVoterFactionBlock(fromCoord, voterId);
+  let toBlock = getVoterFactionBlock(toCoord, voterId);
+  if (fromBlock === toBlock) {
+    // Direct G_0 <-> G_2 shift when k1 > 0: identify which block gained/lost a voter
+    for (const c of [0, 1, 2] as const) {
+      if (toCoord[c] > fromCoord[c]) toBlock = c;
+    }
+  }
+
+  const fromMeta = RULING_COLORS[fromBlock];
+  const toMeta = RULING_COLORS[toBlock];
+  const voterLabel = getVoterLabel(voterId);
+
+  return {
+    voterId,
+    voterLabel,
+    fromBlock,
+    toBlock,
+    fromBlockLabel: fromMeta.coalitionBlock,
+    toBlockLabel: toMeta.coalitionBlock,
+    fromRanking: fromMeta.shapedCoalitionRanking,
+    toRanking: toMeta.shapedCoalitionRanking,
+    summary: `${voterLabel} flipped ballot: ${fromMeta.coalitionBlock} (${fromMeta.shapedCoalitionRanking}) → ${toMeta.coalitionBlock} (${toMeta.shapedCoalitionRanking})`,
+  };
 }
 
 /**
@@ -441,8 +602,13 @@ export function evaluateRulingImplication(
     ruling,
     rulingText: meta.ruling,
     shortBadge: meta.shortBadge,
+    shapedBadge: meta.shapedBadge,
     coalitionBlock: meta.coalitionBlock,
     coalitionRanking: meta.coalitionRanking,
+    shapedCoalitionRanking: meta.shapedCoalitionRanking,
+    crownedWinnerText: meta.crownedWinnerText,
+    crownedWinnerShort: meta.crownedWinnerShort,
+    votersEmpoweredText: formatVotersEmpoweredText(vertex.coord, ruling),
     supportVotes,
     opposeVotes,
     totalVoters: graph.n,
@@ -788,4 +954,64 @@ export function analyzePossibleDictators(
     clearedVoterIds,
     trapVertexIds,
   };
+}
+
+/**
+ * Builds the complete n-voter Senate Roster for the active/hovered profile `coord`,
+ * combining each voter's Faction block, ballot, single-voter shift flip status from `lastMoveCoord`,
+ * and live Dictator status from `dictatorAnalysis`.
+ */
+export function buildElectorateRosterAtProfile(
+  coord: BarycentricCoord,
+  lastMoveCoord: BarycentricCoord | null,
+  dictatorAnalysis: PossibleDictatorsAnalysis | null
+): readonly VoterSeatCardState[] {
+  const n = coord[0] + coord[1] + coord[2];
+  const flipTransition = computeFlippedVoterBetweenProfiles(lastMoveCoord, coord);
+
+  const summaryByVoter = new Map<number, VoterDictatorSummary>();
+  if (dictatorAnalysis) {
+    for (const s of dictatorAnalysis.voterSummaries) {
+      summaryByVoter.set(s.voterId, s);
+    }
+  }
+
+  const seats: VoterSeatCardState[] = [];
+  for (let voterId = 1; voterId <= n; voterId++) {
+    const blockIndex = getVoterFactionBlock(coord, voterId);
+    const meta = RULING_COLORS[blockIndex];
+    const summary = summaryByVoter.get(voterId);
+    const dictatorStatus: VoterDictatorStatus = summary?.status ?? 'viable';
+
+    let dictatorBadgeText: VoterSeatCardState['dictatorBadgeText'];
+    if (dictatorStatus === 'unmasked') {
+      dictatorBadgeText = '👑 DICTATOR UNMASKED';
+    } else if (dictatorStatus === 'armed') {
+      dictatorBadgeText = '⚠️ ARMED DICTATOR';
+    } else if (dictatorStatus === 'cleared') {
+      dictatorBadgeText = '✅ CLEARED';
+    } else {
+      dictatorBadgeText = '🔍 SUSPECT';
+    }
+
+    const isFlippedFromLastMove = flipTransition?.voterId === voterId;
+
+    seats.push({
+      voterId,
+      shortId: `V${voterId}`,
+      name: getVoterName(voterId),
+      fullLabel: getVoterLabel(voterId),
+      blockIndex,
+      blockLabel: meta.coalitionBlock,
+      shapedRanking: meta.shapedCoalitionRanking,
+      championedCandidate: meta.candidateFullLabel,
+      hexColor: meta.hexFill,
+      isFlippedFromLastMove,
+      flipTransition: isFlippedFromLastMove ? flipTransition : null,
+      dictatorStatus,
+      dictatorBadgeText,
+    });
+  }
+
+  return seats;
 }
