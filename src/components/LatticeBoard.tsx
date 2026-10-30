@@ -6,6 +6,7 @@ import {
   VertexId,
 } from '../engine/barycentric';
 import {
+  describeVoterShift,
   evaluateAllRulingsAtVertex,
   getTriadPivotalVoter,
   PossibleDictatorsAnalysis,
@@ -716,12 +717,20 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
           (() => {
             const rawCenter = projectToSvg(selectedVertex.x, selectedVertex.y);
             const clampedX = Math.max(
-              155,
-              Math.min(SVG_WIDTH - 155, rawCenter.x)
+              210,
+              Math.min(SVG_WIDTH - 210, rawCenter.x)
             );
             const clampedY = Math.max(
-              95,
+              135,
               Math.min(SVG_HEIGHT - 85, rawCenter.y)
+            );
+
+            const lastMoveCoord = lastMove
+              ? graph.vertices.get(lastMove)?.coord ?? null
+              : null;
+            const shiftPrompt = describeVoterShift(
+              lastMoveCoord,
+              selectedVertex.coord
             );
 
             const pillPositions: Record<
@@ -738,6 +747,41 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
                 data-testid="radial-color-picker"
                 transform={`translate(${clampedX}, ${clampedY})`}
               >
+                {/* Floating Two-Step Header Pill above radial ring */}
+                <g
+                  data-testid="radial-two-step-callout"
+                  transform="translate(0, -118)"
+                >
+                  <rect
+                    x={-205}
+                    y={-22}
+                    width={410}
+                    height={44}
+                    rx={10}
+                    fill="#0f172a"
+                    fillOpacity={0.96}
+                    stroke="#38bdf8"
+                    strokeWidth={1.8}
+                    filter="url(#hoverDropShadow)"
+                  />
+                  <text
+                    data-testid="radial-step-1-text"
+                    y={-4}
+                    textAnchor="middle"
+                    className="pointer-events-none font-mono text-[10px] font-bold fill-sky-300"
+                  >
+                    {shiftPrompt.step1Text}
+                  </text>
+                  <text
+                    data-testid="radial-step-2-text"
+                    y={11}
+                    textAnchor="middle"
+                    className="pointer-events-none font-mono text-[10px] font-black fill-amber-200"
+                  >
+                    {shiftPrompt.step2Text}
+                  </text>
+                </g>
+
                 {/* Translucent Tether Ring */}
                 <circle
                   r={66}

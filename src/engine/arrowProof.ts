@@ -19,6 +19,7 @@
 import {
   areAdjacentCoords,
   BarycentricCoord,
+  DinnerTeamName,
   ElementaryTriangle,
   getVoterLabel,
   getVoterName,
@@ -26,6 +27,7 @@ import {
   LatticeGraph,
   RULING_COLORS,
   RulingColor,
+  TEAM_NAMES,
   VertexId,
 } from './barycentric';
 
@@ -296,6 +298,58 @@ export function computeFlippedVoterBetweenProfiles(
     fromRanking: fromMeta.shapedCoalitionRanking,
     toRanking: toMeta.shapedCoalitionRanking,
     summary: `${voterLabel} flipped ballot: ${fromMeta.coalitionBlock} (${fromMeta.shapedCoalitionRanking}) → ${toMeta.coalitionBlock} (${toMeta.shapedCoalitionRanking})`,
+  };
+}
+
+export interface VoterShiftDescription {
+  readonly isAdjacentShift: boolean;
+  readonly friendId: number | null;
+  readonly friendName: string | null;
+  readonly fromTeam: DinnerTeamName | null;
+  readonly toTeam: DinnerTeamName | null;
+  readonly step1Text: string;
+  readonly step2Text: string;
+  readonly explanationText: string;
+}
+
+/**
+ * Describes the two-step cause-and-effect logic of moving from `prevCoord` to `nextCoord`:
+ *  - Step 1: Which exact friend switched dinner teams (or the initial/jump 6-friend split)
+ *  - Step 2: Prompting the player to pick who wins this 3-way tie without creating a 3-winner Dictator Triangle.
+ */
+export function describeVoterShift(
+  prevCoord: BarycentricCoord | null,
+  nextCoord: BarycentricCoord
+): VoterShiftDescription {
+  const flip = computeFlippedVoterBetweenProfiles(prevCoord, nextCoord);
+  const n = nextCoord[0] + nextCoord[1] + nextCoord[2];
+  const coordStr = `(${nextCoord.join(', ')})`;
+
+  if (flip) {
+    const friendName = getVoterName(flip.voterId);
+    const fromTeam = TEAM_NAMES[flip.fromBlock];
+    const toTeam = TEAM_NAMES[flip.toBlock];
+    return {
+      isAdjacentShift: true,
+      friendId: flip.voterId,
+      friendName,
+      fromTeam,
+      toTeam,
+      step1Text: `Step 1: Friend #${flip.voterId} (${friendName}) switched ${fromTeam} → ${toTeam} · Split ${coordStr}`,
+      step2Text: 'Step 2: Now pick who wins this 3-way tie:',
+      explanationText: `Even though 1 friend switched teams (${fromTeam} → ${toTeam}) while ${n - 1} friends stayed put, the group is still in a 3-way Rock-Paper-Scissors tie — you can pick any of the 3 winners to avoid creating a 3-winner Dictator Triangle!`,
+    };
+  }
+
+  return {
+    isAdjacentShift: false,
+    friendId: null,
+    friendName: null,
+    fromTeam: null,
+    toTeam: null,
+    step1Text: `Step 1: ${n} Friends split ${coordStr} across Pizza, Tacos & Sushi (3-Way Tie)`,
+    step2Text: 'Step 2: Now pick who wins this 3-way tie:',
+    explanationText: `Even though all 3 teams have votes at ${coordStr}, the group is locked in a 3-way Rock-Paper-Scissors tie — you can pick any of the 3 winners to avoid creating a 3-winner Dictator Triangle!`,
   };
 }
 

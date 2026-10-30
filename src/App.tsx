@@ -323,6 +323,7 @@ export const App: React.FC = () => {
             selectedVertexId={selectedVertexId}
             inspectedVertexId={inspectedId}
             inspectedCoord={inspectedVertex?.coord ?? null}
+            lastMoveCoord={lastMoveVertex?.coord ?? null}
             inspectedIsUnadjudicated={
               inspectedVertex !== null && inspectedColor === undefined
             }

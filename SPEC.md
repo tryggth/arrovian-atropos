@@ -1,6 +1,6 @@
 # SPEC: Arrovian Atropos PWA (Progressive Web App)
 
-- **Document Version**: `0.3.0`
+- **Document Version**: `0.4.1`
 - **Target Agent**: `agy` (Google Antigravity CLI)
 - **Source of Truth Notebook**: `Hidden Dictator Game` (`notebooks/2b675003-edce-43bf-91cd-5d0ee2c33f77`)
 
@@ -46,6 +46,20 @@ To make it immediately obvious **WHO** the 3 candidates and $n=6$ voters are, **
      - Preserves individual Senator badges (`⚡ Flipped Ballot` when stepping from `lastMove`, and `👑 DICTATOR UNMASKED` / `⚠️ ARMED DICTATOR` / `🔍 SUSPECT` / `✅ CLEARED`).
 3. **"Why You Must Rule" Election Deadlock Case Prompt (`ColorPicker.tsx`)**:
    - Displays a 2-line **"Election Deadlock Case"** summary banner above the 3 ruling cards when inspecting an open interior node (`The Problem` + `Your Job as Constitutional Architect`), and shows **Crowned Winner** + **Voters Empowered** (`Sides with V1 (1 voter) over V2–V6 (5 voters)`) on each Ruling Card and Radial Option.
+
+### 1.4 The Explicit Two-Beat Turn Logic ("Step 1: The What-If Shift" + "Step 2: Pick the Tie-Breaker Winner") (`v0.4.1`)
+To prevent any confusion about *why* the player steps toward a corner AND independently picks a winning team, every turn is explicitly presented as a **2-Step Cause-and-Effect Prompt** (`describeVoterShift(prevCoord, nextCoord)`) whenever a legal node is hovered or clicked:
+1. **Step 1 (The Input Shift — How the Vote Changed)**:
+   - **On the opening move (or a Deadlock Jump)**:
+     `Step 1: 6 Friends split (k₀, k₁, k₂) across Pizza, Tacos & Sushi (3-Way Tie)`
+   - **On any adjacent step ($k = 1$ from `lastMove`)**:
+     `Step 1: Friend #d (Name) switched Team X → Team Y · Split (k₀, k₁, k₂)` (5 friends kept the exact same vote; still a 3-way tie!).
+2. **Step 2 (The Output Decision — Your Tie-Breaker Choice)**:
+   - `Step 2: Now pick who wins this 3-way tie:`
+   - Explicitly notes that even though 1 friend switched teams (`Team Pizza` / `Team Tacos` / `Team Sushi`), the group is still in a 3-way Rock-Paper-Scissors tie and you can pick *any* of the 3 winners to avoid creating a 3-winner Dictator Triangle.
+3. **Section 2.1 — Two-Step Header Callout on Radial Popover (`LatticeBoard.tsx`) & `ColorPicker.tsx`**:
+   - When a legal node `selectedVertex` is clicked on `LatticeBoard.tsx`, renders a floating SVG header pill (`data-testid="radial-two-step-callout"`) directly above the radial ring displaying `Step 1` (`radial-step-1-text`) and `Step 2` (`radial-step-2-text`).
+   - Mirrors this exact `Step 1` / `Step 2` banner (`data-testid="two-step-tiebreaker-banner"`) at the top of `ColorPicker.tsx` whenever a node is selected or hovered.
 
 ---
 

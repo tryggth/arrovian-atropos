@@ -13,6 +13,7 @@ import {
   getVoterName,
   latticeDistance,
   RulingColor,
+  TEAM_NAMES,
   toVertexId,
 } from '../engine/barycentric';
 import {
@@ -28,6 +29,7 @@ import {
   computePairwiseTallies,
   computePivotalVoterIndex,
   computeVoterBlockPartitions,
+  describeVoterShift,
   evaluateAllRulingsAtVertex,
   evaluateRulingImplication,
   extractParadoxTriadProof,
@@ -471,6 +473,29 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       const adjacentSeats = buildElectorateRosterAtProfile([1, 3, 2], [2, 2, 2], analysis);
       expect(adjacentSeats[1].isFlippedFromLastMove).toBe(true);
       expect(adjacentSeats[0].isFlippedFromLastMove).toBe(false);
+
+      // 6. describeVoterShift & TEAM_NAMES
+      expect(TEAM_NAMES[0]).toBe('Team Pizza');
+      expect(TEAM_NAMES[1]).toBe('Team Tacos');
+      expect(TEAM_NAMES[2]).toBe('Team Sushi');
+
+      const openingShift = describeVoterShift(null, [2, 2, 2]);
+      expect(openingShift.step1Text).toBe(
+        'Step 1: 6 Friends split (2, 2, 2) across Pizza, Tacos & Sushi (3-Way Tie)'
+      );
+      expect(openingShift.step2Text).toBe(
+        'Step 2: Now pick who wins this 3-way tie:'
+      );
+
+      const adjacentShift1 = describeVoterShift([1, 2, 3], [2, 1, 3]);
+      expect(adjacentShift1.step1Text).toBe(
+        'Step 1: Friend #2 (Blaise) switched Team Tacos → Team Pizza · Split (2, 1, 3)'
+      );
+
+      const adjacentShift2 = describeVoterShift([2, 2, 2], [1, 3, 2]);
+      expect(adjacentShift2.step1Text).toBe(
+        'Step 1: Friend #2 (Blaise) switched Team Pizza → Team Tacos · Split (1, 3, 2)'
+      );
     });
   });
 
@@ -491,6 +516,22 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       const centerNode = screen.getByTestId('vertex-2,2,2');
       expect(centerNode.getAttribute('data-legal')).toBe('true');
       fireEvent.click(centerNode);
+
+      // Two-Step Move Callout on SVG Radial Popover and Ruling Chamber Banner
+      expect(screen.getByTestId('radial-two-step-callout')).toBeDefined();
+      expect(screen.getByTestId('radial-step-1-text').textContent).toBe(
+        'Step 1: 6 Friends split (2, 2, 2) across Pizza, Tacos & Sushi (3-Way Tie)'
+      );
+      expect(screen.getByTestId('radial-step-2-text').textContent).toBe(
+        'Step 2: Now pick who wins this 3-way tie:'
+      );
+      expect(screen.getByTestId('two-step-tiebreaker-banner')).toBeDefined();
+      expect(screen.getByTestId('picker-step-1-text').textContent).toBe(
+        'Step 1: 6 Friends split (2, 2, 2) across Pizza, Tacos & Sushi (3-Way Tie)'
+      );
+      expect(screen.getByTestId('picker-step-2-text').textContent).toContain(
+        'Step 2: Now pick who wins this 3-way tie:'
+      );
 
       // Radial option 1 should show B ≻ A and coalition split G₁: 2v4 Minority
       const radialOption1 = screen.getByTestId('radial-color-option-1');
@@ -528,6 +569,22 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       );
       expect(activeConstraint).toBeDefined();
       expect(activeConstraint.textContent).toContain('d ∈ {#3, #4}');
+
+      // Hover and click adjacent node (1, 3, 2) to verify picker-step-1-text and radial-step-1-text update
+      const adjacent132 = screen.getByTestId('vertex-1,3,2');
+      fireEvent.mouseEnter(adjacent132);
+      expect(screen.getByTestId('picker-step-1-text').textContent).toBe(
+        'Step 1: Friend #2 (Blaise) switched Team Pizza → Team Tacos · Split (1, 3, 2)'
+      );
+
+      fireEvent.click(adjacent132);
+      expect(screen.getByTestId('radial-step-1-text').textContent).toBe(
+        'Step 1: Friend #2 (Blaise) switched Team Pizza → Team Tacos · Split (1, 3, 2)'
+      );
+      expect(screen.getByTestId('picker-step-1-text').textContent).toBe(
+        'Step 1: Friend #2 (Blaise) switched Team Pizza → Team Tacos · Split (1, 3, 2)'
+      );
+      fireEvent.mouseLeave(adjacent132);
 
       // Verify boundary-seed-button generates a new border seed and resets vertex-2,2,2 back to 'uncolored' at Step 1
       const seedBtn = screen.getByTestId('boundary-seed-button');
@@ -755,6 +812,15 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       expect(deadlockBanner.textContent).toContain('The Problem: At (2, 2, 2)');
       expect(deadlockBanner.textContent).toContain('Your Job as Constitutional Architect');
 
+      // Two-step banner renders
+      expect(screen.getByTestId('two-step-tiebreaker-banner')).toBeDefined();
+      expect(screen.getByTestId('picker-step-1-text').textContent).toBe(
+        'Step 1: 6 Friends split (2, 2, 2) across Pizza, Tacos & Sushi (3-Way Tie)'
+      );
+      expect(screen.getByTestId('picker-step-2-text').textContent).toContain(
+        'Step 2: Now pick who wins this 3-way tie:'
+      );
+
       // Crowned Winner and Voters Empowered
       const crowned0 = screen.getByTestId('crowned-winner-0');
       expect(crowned0.textContent).toContain('Cuts ▲C≻●A → ●A (Atlas) Wins');
@@ -780,6 +846,11 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
 
       const flipCallout = screen.getByTestId('flipped-voter-callout');
       expect(flipCallout.textContent).toContain('V2 · Blaise flipped ballot');
+
+      // Verify picker-step-1-text updates to adjacent 1-friend shift
+      expect(screen.getByTestId('picker-step-1-text').textContent).toBe(
+        'Step 1: Friend #2 (Blaise) switched Team Pizza → Team Tacos · Split (1, 3, 2)'
+      );
 
       // 4. Hover boundary corner (6, 0, 0) and verify Bloc G₀: 6 Senators and empty-bloc-1 and empty-bloc-2
       const topCorner = screen.getByTestId('vertex-6,0,0');

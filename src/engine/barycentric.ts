@@ -78,6 +78,14 @@ export function getVoterLabel(voterId: number): string {
   return `V${voterId} · ${getVoterName(voterId)}`;
 }
 
+export type DinnerTeamName = 'Team Pizza' | 'Team Tacos' | 'Team Sushi';
+
+export const TEAM_NAMES: Record<RulingColor, DinnerTeamName> = {
+  0: 'Team Pizza',
+  1: 'Team Tacos',
+  2: 'Team Sushi',
+};
+
 export interface ColorMetadata {
   readonly color: RulingColor;
   readonly name: string;

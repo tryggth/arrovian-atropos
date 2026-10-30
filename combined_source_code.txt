@@ -1,6 +1,6 @@
 ================================================================================
- ARROVIAN ATROPOS PWA (v0.2.7) - COMBINED SOURCE CODE BUNDLE
- Generated on: 2026-10-30T01:02:23.976Z
+ ARROVIAN ATROPOS PWA (v0.2.8) - COMBINED SOURCE CODE BUNDLE
+ Generated on: 2026-10-30T20:08:42.568Z
  Total Source Files: 27
 ================================================================================
 
@@ -132,7 +132,7 @@ This project enforces a strict **2-level sub-agent routing architecture** using 
 
 # SPEC: Arrovian Atropos PWA (Progressive Web App)
 
-- **Document Version**: `0.3.0`
+- **Document Version**: `0.4.1`
 - **Target Agent**: `agy` (Google Antigravity CLI)
 - **Source of Truth Notebook**: `Hidden Dictator Game` (`notebooks/2b675003-edce-43bf-91cd-5d0ee2c33f77`)
 
@@ -178,6 +178,20 @@ To make it immediately obvious **WHO** the 3 candidates and $n=6$ voters are, **
      - Preserves individual Senator badges (`⚡ Flipped Ballot` when stepping from `lastMove`, and `👑 DICTATOR UNMASKED` / `⚠️ ARMED DICTATOR` / `🔍 SUSPECT` / `✅ CLEARED`).
 3. **"Why You Must Rule" Election Deadlock Case Prompt (`ColorPicker.tsx`)**:
    - Displays a 2-line **"Election Deadlock Case"** summary banner above the 3 ruling cards when inspecting an open interior node (`The Problem` + `Your Job as Constitutional Architect`), and shows **Crowned Winner** + **Voters Empowered** (`Sides with V1 (1 voter) over V2–V6 (5 voters)`) on each Ruling Card and Radial Option.
+
+### 1.4 The Explicit Two-Beat Turn Logic ("Step 1: The What-If Shift" + "Step 2: Pick the Tie-Breaker Winner") (`v0.4.1`)
+To prevent any confusion about *why* the player steps toward a corner AND independently picks a winning team, every turn is explicitly presented as a **2-Step Cause-and-Effect Prompt** (`describeVoterShift(prevCoord, nextCoord)`) whenever a legal node is hovered or clicked:
+1. **Step 1 (The Input Shift — How the Vote Changed)**:
+   - **On the opening move (or a Deadlock Jump)**:
+     `Step 1: 6 Friends split (k₀, k₁, k₂) across Pizza, Tacos & Sushi (3-Way Tie)`
+   - **On any adjacent step ($k = 1$ from `lastMove`)**:
+     `Step 1: Friend #d (Name) switched Team X → Team Y · Split (k₀, k₁, k₂)` (5 friends kept the exact same vote; still a 3-way tie!).
+2. **Step 2 (The Output Decision — Your Tie-Breaker Choice)**:
+   - `Step 2: Now pick who wins this 3-way tie:`
+   - Explicitly notes that even though 1 friend switched teams (`Team Pizza` / `Team Tacos` / `Team Sushi`), the group is still in a 3-way Rock-Paper-Scissors tie and you can pick *any* of the 3 winners to avoid creating a 3-winner Dictator Triangle.
+3. **Section 2.1 — Two-Step Header Callout on Radial Popover (`LatticeBoard.tsx`) & `ColorPicker.tsx`**:
+   - When a legal node `selectedVertex` is clicked on `LatticeBoard.tsx`, renders a floating SVG header pill (`data-testid="radial-two-step-callout"`) directly above the radial ring displaying `Step 1` (`radial-step-1-text`) and `Step 2` (`radial-step-2-text`).
+   - Mirrors this exact `Step 1` / `Step 2` banner (`data-testid="two-step-tiebreaker-banner"`) at the top of `ColorPicker.tsx` whenever a node is selected or hovered.
 
 ---
 
@@ -372,7 +386,7 @@ To match the established `agy` deployment pattern used across sibling PWA projec
 {
   "name": "arrovian-atropos",
   "private": true,
-  "version": "0.2.7",
+  "version": "0.2.8",
   "type": "module",
   "description": "Arrovian Atropos PWA — Sperner's Lemma & Arrow's Impossibility Theorem Game",
   "scripts": {
@@ -419,10 +433,10 @@ To match the established `agy` deployment pattern used across sibling PWA projec
 
 {
   "name": "Arrovian Atropos PWA",
-  "version": "v0.2.7",
-  "buildVersion": "arrovian-atropos-v0.2.7-1778561-1793322143943",
-  "commitSha": "1778561",
-  "timestamp": 1793322143943
+  "version": "v0.2.8",
+  "buildVersion": "arrovian-atropos-v0.2.8-af84ad7-1793390922529",
+  "commitSha": "af84ad7",
+  "timestamp": 1793390922529
 }
 
 
@@ -815,6 +829,7 @@ export const App: React.FC = () => {
             selectedVertexId={selectedVertexId}
             inspectedVertexId={inspectedId}
             inspectedCoord={inspectedVertex?.coord ?? null}
+            lastMoveCoord={lastMoveVertex?.coord ?? null}
             inspectedIsUnadjudicated={
               inspectedVertex !== null && inspectedColor === undefined
             }
@@ -998,6 +1013,7 @@ import {
   getVoterName,
   latticeDistance,
   RulingColor,
+  TEAM_NAMES,
   toVertexId,
 } from '../engine/barycentric';
 import {
@@ -1013,6 +1029,7 @@ import {
   computePairwiseTallies,
   computePivotalVoterIndex,
   computeVoterBlockPartitions,
+  describeVoterShift,
   evaluateAllRulingsAtVertex,
   evaluateRulingImplication,
   extractParadoxTriadProof,
@@ -1456,6 +1473,29 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       const adjacentSeats = buildElectorateRosterAtProfile([1, 3, 2], [2, 2, 2], analysis);
       expect(adjacentSeats[1].isFlippedFromLastMove).toBe(true);
       expect(adjacentSeats[0].isFlippedFromLastMove).toBe(false);
+
+      // 6. describeVoterShift & TEAM_NAMES
+      expect(TEAM_NAMES[0]).toBe('Team Pizza');
+      expect(TEAM_NAMES[1]).toBe('Team Tacos');
+      expect(TEAM_NAMES[2]).toBe('Team Sushi');
+
+      const openingShift = describeVoterShift(null, [2, 2, 2]);
+      expect(openingShift.step1Text).toBe(
+        'Step 1: 6 Friends split (2, 2, 2) across Pizza, Tacos & Sushi (3-Way Tie)'
+      );
+      expect(openingShift.step2Text).toBe(
+        'Step 2: Now pick who wins this 3-way tie:'
+      );
+
+      const adjacentShift1 = describeVoterShift([1, 2, 3], [2, 1, 3]);
+      expect(adjacentShift1.step1Text).toBe(
+        'Step 1: Friend #2 (Blaise) switched Team Tacos → Team Pizza · Split (2, 1, 3)'
+      );
+
+      const adjacentShift2 = describeVoterShift([2, 2, 2], [1, 3, 2]);
+      expect(adjacentShift2.step1Text).toBe(
+        'Step 1: Friend #2 (Blaise) switched Team Pizza → Team Tacos · Split (1, 3, 2)'
+      );
     });
   });
 
@@ -1476,6 +1516,22 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       const centerNode = screen.getByTestId('vertex-2,2,2');
       expect(centerNode.getAttribute('data-legal')).toBe('true');
       fireEvent.click(centerNode);
+
+      // Two-Step Move Callout on SVG Radial Popover and Ruling Chamber Banner
+      expect(screen.getByTestId('radial-two-step-callout')).toBeDefined();
+      expect(screen.getByTestId('radial-step-1-text').textContent).toBe(
+        'Step 1: 6 Friends split (2, 2, 2) across Pizza, Tacos & Sushi (3-Way Tie)'
+      );
+      expect(screen.getByTestId('radial-step-2-text').textContent).toBe(
+        'Step 2: Now pick who wins this 3-way tie:'
+      );
+      expect(screen.getByTestId('two-step-tiebreaker-banner')).toBeDefined();
+      expect(screen.getByTestId('picker-step-1-text').textContent).toBe(
+        'Step 1: 6 Friends split (2, 2, 2) across Pizza, Tacos & Sushi (3-Way Tie)'
+      );
+      expect(screen.getByTestId('picker-step-2-text').textContent).toContain(
+        'Step 2: Now pick who wins this 3-way tie:'
+      );
 
       // Radial option 1 should show B ≻ A and coalition split G₁: 2v4 Minority
       const radialOption1 = screen.getByTestId('radial-color-option-1');
@@ -1513,6 +1569,22 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       );
       expect(activeConstraint).toBeDefined();
       expect(activeConstraint.textContent).toContain('d ∈ {#3, #4}');
+
+      // Hover and click adjacent node (1, 3, 2) to verify picker-step-1-text and radial-step-1-text update
+      const adjacent132 = screen.getByTestId('vertex-1,3,2');
+      fireEvent.mouseEnter(adjacent132);
+      expect(screen.getByTestId('picker-step-1-text').textContent).toBe(
+        'Step 1: Friend #2 (Blaise) switched Team Pizza → Team Tacos · Split (1, 3, 2)'
+      );
+
+      fireEvent.click(adjacent132);
+      expect(screen.getByTestId('radial-step-1-text').textContent).toBe(
+        'Step 1: Friend #2 (Blaise) switched Team Pizza → Team Tacos · Split (1, 3, 2)'
+      );
+      expect(screen.getByTestId('picker-step-1-text').textContent).toBe(
+        'Step 1: Friend #2 (Blaise) switched Team Pizza → Team Tacos · Split (1, 3, 2)'
+      );
+      fireEvent.mouseLeave(adjacent132);
 
       // Verify boundary-seed-button generates a new border seed and resets vertex-2,2,2 back to 'uncolored' at Step 1
       const seedBtn = screen.getByTestId('boundary-seed-button');
@@ -1740,6 +1812,15 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       expect(deadlockBanner.textContent).toContain('The Problem: At (2, 2, 2)');
       expect(deadlockBanner.textContent).toContain('Your Job as Constitutional Architect');
 
+      // Two-step banner renders
+      expect(screen.getByTestId('two-step-tiebreaker-banner')).toBeDefined();
+      expect(screen.getByTestId('picker-step-1-text').textContent).toBe(
+        'Step 1: 6 Friends split (2, 2, 2) across Pizza, Tacos & Sushi (3-Way Tie)'
+      );
+      expect(screen.getByTestId('picker-step-2-text').textContent).toContain(
+        'Step 2: Now pick who wins this 3-way tie:'
+      );
+
       // Crowned Winner and Voters Empowered
       const crowned0 = screen.getByTestId('crowned-winner-0');
       expect(crowned0.textContent).toContain('Cuts ▲C≻●A → ●A (Atlas) Wins');
@@ -1765,6 +1846,11 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
 
       const flipCallout = screen.getByTestId('flipped-voter-callout');
       expect(flipCallout.textContent).toContain('V2 · Blaise flipped ballot');
+
+      // Verify picker-step-1-text updates to adjacent 1-friend shift
+      expect(screen.getByTestId('picker-step-1-text').textContent).toBe(
+        'Step 1: Friend #2 (Blaise) switched Team Pizza → Team Tacos · Split (1, 3, 2)'
+      );
 
       // 4. Hover boundary corner (6, 0, 0) and verify Bloc G₀: 6 Senators and empty-bloc-1 and empty-bloc-2
       const topCorner = screen.getByTestId('vertex-6,0,0');
@@ -1921,7 +2007,11 @@ import {
   RulingColor,
   VertexId,
 } from '../engine/barycentric';
-import { RulingImplication, SWF_OUTPUT_CONSTRAINTS } from '../engine/arrowProof';
+import {
+  describeVoterShift,
+  RulingImplication,
+  SWF_OUTPUT_CONSTRAINTS,
+} from '../engine/arrowProof';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -1936,6 +2026,7 @@ export interface ColorPickerProps {
   readonly inspectedVertexId: VertexId | null;
   readonly inspectedCoord: BarycentricCoord | null;
   readonly inspectedIsUnadjudicated: boolean;
+  readonly lastMoveCoord?: BarycentricCoord | null;
   readonly implications: Record<RulingColor, RulingImplication> | null;
   readonly quickPlaceMode: boolean;
   readonly showImpossibilityWarnings: boolean;
@@ -1954,6 +2045,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
   inspectedVertexId,
   inspectedCoord,
   inspectedIsUnadjudicated,
+  lastMoveCoord,
   implications,
   quickPlaceMode,
   showImpossibilityWarnings,
@@ -2026,6 +2118,33 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Prominent Two-Step Callout Banner */}
+      {inspectedCoord !== null && (() => {
+        const shiftPrompt = describeVoterShift(
+          lastMoveCoord ?? null,
+          inspectedCoord
+        );
+        return (
+          <div
+            data-testid="two-step-tiebreaker-banner"
+            className="mb-3 rounded-xl border border-sky-500/40 bg-sky-950/40 p-3 text-xs shadow-md"
+          >
+            <div
+              data-testid="picker-step-1-text"
+              className="font-mono font-bold text-sky-300"
+            >
+              {shiftPrompt.step1Text}
+            </div>
+            <div
+              data-testid="picker-step-2-text"
+              className="mt-1 font-semibold text-amber-200"
+            >
+              {shiftPrompt.step2Text} {shiftPrompt.explanationText}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Dynamic Election Deadlock Case Banner */}
       {inspectedCoord !== null && inspectedIsUnadjudicated && (() => {
@@ -2787,6 +2906,7 @@ import {
   VertexId,
 } from '../engine/barycentric';
 import {
+  describeVoterShift,
   evaluateAllRulingsAtVertex,
   getTriadPivotalVoter,
   PossibleDictatorsAnalysis,
@@ -3497,12 +3617,20 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
           (() => {
             const rawCenter = projectToSvg(selectedVertex.x, selectedVertex.y);
             const clampedX = Math.max(
-              155,
-              Math.min(SVG_WIDTH - 155, rawCenter.x)
+              210,
+              Math.min(SVG_WIDTH - 210, rawCenter.x)
             );
             const clampedY = Math.max(
-              95,
+              135,
               Math.min(SVG_HEIGHT - 85, rawCenter.y)
+            );
+
+            const lastMoveCoord = lastMove
+              ? graph.vertices.get(lastMove)?.coord ?? null
+              : null;
+            const shiftPrompt = describeVoterShift(
+              lastMoveCoord,
+              selectedVertex.coord
             );
 
             const pillPositions: Record<
@@ -3519,6 +3647,41 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
                 data-testid="radial-color-picker"
                 transform={`translate(${clampedX}, ${clampedY})`}
               >
+                {/* Floating Two-Step Header Pill above radial ring */}
+                <g
+                  data-testid="radial-two-step-callout"
+                  transform="translate(0, -118)"
+                >
+                  <rect
+                    x={-205}
+                    y={-22}
+                    width={410}
+                    height={44}
+                    rx={10}
+                    fill="#0f172a"
+                    fillOpacity={0.96}
+                    stroke="#38bdf8"
+                    strokeWidth={1.8}
+                    filter="url(#hoverDropShadow)"
+                  />
+                  <text
+                    data-testid="radial-step-1-text"
+                    y={-4}
+                    textAnchor="middle"
+                    className="pointer-events-none font-mono text-[10px] font-bold fill-sky-300"
+                  >
+                    {shiftPrompt.step1Text}
+                  </text>
+                  <text
+                    data-testid="radial-step-2-text"
+                    y={11}
+                    textAnchor="middle"
+                    className="pointer-events-none font-mono text-[10px] font-black fill-amber-200"
+                  >
+                    {shiftPrompt.step2Text}
+                  </text>
+                </g>
+
                 {/* Translucent Tether Ring */}
                 <circle
                   r={66}
@@ -4118,6 +4281,7 @@ export const VoterRosterBar: React.FC<VoterRosterBarProps> = ({
 import {
   areAdjacentCoords,
   BarycentricCoord,
+  DinnerTeamName,
   ElementaryTriangle,
   getVoterLabel,
   getVoterName,
@@ -4125,6 +4289,7 @@ import {
   LatticeGraph,
   RULING_COLORS,
   RulingColor,
+  TEAM_NAMES,
   VertexId,
 } from './barycentric';
 
@@ -4395,6 +4560,58 @@ export function computeFlippedVoterBetweenProfiles(
     fromRanking: fromMeta.shapedCoalitionRanking,
     toRanking: toMeta.shapedCoalitionRanking,
     summary: `${voterLabel} flipped ballot: ${fromMeta.coalitionBlock} (${fromMeta.shapedCoalitionRanking}) → ${toMeta.coalitionBlock} (${toMeta.shapedCoalitionRanking})`,
+  };
+}
+
+export interface VoterShiftDescription {
+  readonly isAdjacentShift: boolean;
+  readonly friendId: number | null;
+  readonly friendName: string | null;
+  readonly fromTeam: DinnerTeamName | null;
+  readonly toTeam: DinnerTeamName | null;
+  readonly step1Text: string;
+  readonly step2Text: string;
+  readonly explanationText: string;
+}
+
+/**
+ * Describes the two-step cause-and-effect logic of moving from `prevCoord` to `nextCoord`:
+ *  - Step 1: Which exact friend switched dinner teams (or the initial/jump 6-friend split)
+ *  - Step 2: Prompting the player to pick who wins this 3-way tie without creating a 3-winner Dictator Triangle.
+ */
+export function describeVoterShift(
+  prevCoord: BarycentricCoord | null,
+  nextCoord: BarycentricCoord
+): VoterShiftDescription {
+  const flip = computeFlippedVoterBetweenProfiles(prevCoord, nextCoord);
+  const n = nextCoord[0] + nextCoord[1] + nextCoord[2];
+  const coordStr = `(${nextCoord.join(', ')})`;
+
+  if (flip) {
+    const friendName = getVoterName(flip.voterId);
+    const fromTeam = TEAM_NAMES[flip.fromBlock];
+    const toTeam = TEAM_NAMES[flip.toBlock];
+    return {
+      isAdjacentShift: true,
+      friendId: flip.voterId,
+      friendName,
+      fromTeam,
+      toTeam,
+      step1Text: `Step 1: Friend #${flip.voterId} (${friendName}) switched ${fromTeam} → ${toTeam} · Split ${coordStr}`,
+      step2Text: 'Step 2: Now pick who wins this 3-way tie:',
+      explanationText: `Even though 1 friend switched teams (${fromTeam} → ${toTeam}) while ${n - 1} friends stayed put, the group is still in a 3-way Rock-Paper-Scissors tie — you can pick any of the 3 winners to avoid creating a 3-winner Dictator Triangle!`,
+    };
+  }
+
+  return {
+    isAdjacentShift: false,
+    friendId: null,
+    friendName: null,
+    fromTeam: null,
+    toTeam: null,
+    step1Text: `Step 1: ${n} Friends split ${coordStr} across Pizza, Tacos & Sushi (3-Way Tie)`,
+    step2Text: 'Step 2: Now pick who wins this 3-way tie:',
+    explanationText: `Even though all 3 teams have votes at ${coordStr}, the group is locked in a 3-way Rock-Paper-Scissors tie — you can pick any of the 3 winners to avoid creating a 3-winner Dictator Triangle!`,
   };
 }
 
@@ -5200,6 +5417,14 @@ export function getVoterName(voterId: number): string {
 export function getVoterLabel(voterId: number): string {
   return `V${voterId} · ${getVoterName(voterId)}`;
 }
+
+export type DinnerTeamName = 'Team Pizza' | 'Team Tacos' | 'Team Sushi';
+
+export const TEAM_NAMES: Record<RulingColor, DinnerTeamName> = {
+  0: 'Team Pizza',
+  1: 'Team Tacos',
+  2: 'Team Sushi',
+};
 
 export interface ColorMetadata {
   readonly color: RulingColor;

@@ -5,7 +5,11 @@ import {
   RulingColor,
   VertexId,
 } from '../engine/barycentric';
-import { RulingImplication, SWF_OUTPUT_CONSTRAINTS } from '../engine/arrowProof';
+import {
+  describeVoterShift,
+  RulingImplication,
+  SWF_OUTPUT_CONSTRAINTS,
+} from '../engine/arrowProof';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -20,6 +24,7 @@ export interface ColorPickerProps {
   readonly inspectedVertexId: VertexId | null;
   readonly inspectedCoord: BarycentricCoord | null;
   readonly inspectedIsUnadjudicated: boolean;
+  readonly lastMoveCoord?: BarycentricCoord | null;
   readonly implications: Record<RulingColor, RulingImplication> | null;
   readonly quickPlaceMode: boolean;
   readonly showImpossibilityWarnings: boolean;
@@ -38,6 +43,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
   inspectedVertexId,
   inspectedCoord,
   inspectedIsUnadjudicated,
+  lastMoveCoord,
   implications,
   quickPlaceMode,
   showImpossibilityWarnings,
@@ -110,6 +116,33 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Prominent Two-Step Callout Banner */}
+      {inspectedCoord !== null && (() => {
+        const shiftPrompt = describeVoterShift(
+          lastMoveCoord ?? null,
+          inspectedCoord
+        );
+        return (
+          <div
+            data-testid="two-step-tiebreaker-banner"
+            className="mb-3 rounded-xl border border-sky-500/40 bg-sky-950/40 p-3 text-xs shadow-md"
+          >
+            <div
+              data-testid="picker-step-1-text"
+              className="font-mono font-bold text-sky-300"
+            >
+              {shiftPrompt.step1Text}
+            </div>
+            <div
+              data-testid="picker-step-2-text"
+              className="mt-1 font-semibold text-amber-200"
+            >
+              {shiftPrompt.step2Text} {shiftPrompt.explanationText}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Dynamic Election Deadlock Case Banner */}
       {inspectedCoord !== null && inspectedIsUnadjudicated && (() => {
