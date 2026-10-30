@@ -1,7 +1,7 @@
 {
   "name": "arrovian-atropos",
   "private": true,
-  "version": "0.2.6",
+  "version": "0.2.7",
   "type": "module",
   "description": "Arrovian Atropos PWA — Sperner's Lemma & Arrow's Impossibility Theorem Game",
   "scripts": {

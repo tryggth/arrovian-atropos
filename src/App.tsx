@@ -25,6 +25,7 @@ import { InspectorPanel } from './components/InspectorPanel';
 import { PossibleDictatorsPanel } from './components/PossibleDictatorsPanel';
 import { DictatorModal } from './components/DictatorModal';
 import { VoterRosterBar } from './components/VoterRosterBar';
+import { BriefingBanner } from './components/BriefingBanner';
 import { Compass, Footprints, ScrollText, ShieldAlert } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -36,6 +37,7 @@ export const App: React.FC = () => {
     createInitialGameState(DEFAULT_BOARD_SIZE, 'arrow-1951')
   );
 
+  const [showBriefing, setShowBriefing] = useState<boolean>(true);
   const [selectedVertexId, setSelectedVertexId] = useState<VertexId | null>(
     null
   );
@@ -142,19 +144,15 @@ export const App: React.FC = () => {
   const lastMoveVertex = gameState.lastMove
     ? gameState.graph.vertices.get(gameState.lastMove) ?? null
     : null;
-  const defaultCenterCoord: BarycentricCoord = [
-    Math.floor(boardSize / 3),
-    Math.floor(boardSize / 3),
-    boardSize - 2 * Math.floor(boardSize / 3),
-  ];
-  const activeRosterCoord = inspectedVertex?.coord ?? defaultCenterCoord;
+  const activeRosterCoord: BarycentricCoord | null =
+    inspectedVertex?.coord ?? null;
   const activeRosterLabel = hoveredVertexId
     ? 'Hovered Node'
     : selectedVertexId
       ? 'Selected Node'
       : gameState.lastMove
         ? 'Precedent Anchor'
-        : 'Center Divided Profile';
+        : 'Idle — Hover or Click Any Node';
 
   const totalDividedProfiles = gameState.graph.interiorIds.length;
   const adjudicatedProfiles = gameState.moveHistory.length;
@@ -173,6 +171,8 @@ export const App: React.FC = () => {
         showPossibleDictators={showPossibleDictators}
         possibleDictatorCount={dictatorAnalysis.activeCandidateVoterIds.length}
         onTogglePossibleDictators={() => setShowPossibleDictators((prev) => !prev)}
+        showBriefing={showBriefing}
+        onToggleBriefing={() => setShowBriefing((prev) => !prev)}
         appVersion={appVersion}
         hasUpdate={hasUpdate}
         latestVersion={latestVersion}
@@ -188,6 +188,12 @@ export const App: React.FC = () => {
       <main className="mx-auto grid w-full max-w-7xl flex-1 grid-cols-1 gap-5 px-4 py-4 sm:px-6 lg:grid-cols-12">
         {/* Left / Center Column: Status Banner, Simplex Board & Ruling Chambers */}
         <div className="flex flex-col gap-4 lg:col-span-8">
+          <BriefingBanner
+            n={boardSize}
+            isOpen={showBriefing}
+            onToggle={() => setShowBriefing((prev) => !prev)}
+          />
+
           {/* Active Step / Post-Mortem Banner */}
           {gameState.status === 'playing' ? (
             <div className="flex flex-col gap-2.5 rounded-2xl border border-slate-800/90 bg-slate-900/80 px-4 py-3 shadow-lg">

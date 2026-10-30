@@ -1,32 +1,49 @@
 # SPEC: Arrovian Atropos PWA (Progressive Web App)
 
-- **Document Version**: `0.3.0-alpha`
+- **Document Version**: `0.3.0`
 - **Target Agent**: `agy` (Google Antigravity CLI)
 - **Source of Truth Notebook**: `Hidden Dictator Game` (`notebooks/2b675003-edce-43bf-91cd-5d0ee2c33f77`)
 
 ---
 
-## 1. Executive Summary & Pedagogical Mission
+## 1. Executive Summary & Player Narrative ("The Constitutional Architect's Briefing")
 
 **Arrovian Atropos** is an interactive, offline-capable Progressive Web App (PWA) that unifies **Burke & Teng's (2008) combinatorial game *Atropos*** with **Tanaka's / Sperner's topological proof of Arrow's Impossibility Theorem**.
 
-### 1.1 The Constitutional Architect's Dilemma (Solo Constitutional Puzzle)
-- **The Core Arrovian Insight**: By Arrow's Impossibility Theorem (and Sperner's Lemma), if a **single Constitutional Architect** tries to adjudicate every divided preference profile on the board while respecting **Unanimity (Pareto)** on the boundary and **Independence of Irrelevant Alternatives (IIA)** locally, **it is mathematically impossible to complete the constitution without creating an intransitive Condorcet cycle / unmasking a Pivotal Dictator**.
-- **Gameplay ("The Constitutional Architect's Dilemma")**:
-  - The user acts as the **Constitutional Architect** stepping from profile to profile via **Single-Voter Shifts ($k=1$)**, trying to adjudicate as many divided preference profiles as possible without triggering a Condorcet Paradox or unmasking a Hidden Dictator.
-  - Because Arrow's Theorem guarantees the puzzle has **no complete solution** (0% survival rate at 100% completion), the player experiences Arrow's Impossibility Theorem firsthand as safe rulings narrow down until a final profile forces a Dictator/Paradox under all 3 choices.
+### 1.1 The Player's Mental Model & Narrative Briefing (`BriefingBanner.tsx`)
+To ensure a first-time player immediately understands **who they are**, **what the board represents**, **why voters share ballots in 3 blocs**, and **why they must issue rulings**, the app features a clear, collapsible **"Constitutional Architect's Briefing"** card at the top of the workspace (plus a `? Briefing / Story` toggle button in `HeaderControls.tsx`):
+1. **Your Role — The Constitutional Architect**:
+   - You are drafting the **Constitution ($F$)** for a **6-Senator Council** (`V1 · Ada` through `V6 · Kenneth`) voting on 3 rival candidates: `● Atlas (A)`, `■ Boreas (B)`, and `▲ Cybele (C)`.
+2. **What Each Node Is — A "What-If" Election Scenario $(k_0, k_1, k_2)$**:
+   - The Senators do **not** have fixed ballots for the whole game. Instead, every circle $(k_0, k_1, k_2)$ on the triangular map is a **different possible election** where the 6 Senators split into **3 Voting Blocs (Factions)**:
+     - **Bloc $G_0$ ($k_0$ Senators)**: Vote `●A ≻ ■B ≻ ▲C`
+     - **Bloc $G_1$ ($k_1$ Senators)**: Vote `■B ≻ ▲C ≻ ●A`
+     - **Bloc $G_2$ ($k_2$ Senators)**: Vote `▲C ≻ ●A ≻ ■B`
+   - Because there are 6 Senators and only 3 Voting Blocs, Senators in the same bloc cast identical ballots at that node.
+3. **Why the Border Is Pre-Colored — The Unanimity Rule**:
+   - On the outer edges of the triangle, one bloc has **0 Senators** ($k_i = 0$). That means **all 6 Senators unanimously agree** on one pair of candidates (e.g., when $k_0 = 0$, all 6 Senators rank `▲C ≻ ●A`). A valid Constitution cannot violate a 6–0 unanimous vote, so the border elections are already settled.
+4. **Why You Must Rule on the Interior — Breaking the Circular Tie**:
+   - On every open interior node, all 3 blocs have at least 1 Senator, creating a **Rock-Paper-Scissors circular tie** (`●A ≻ ■B ≻ ▲C ≻ ●A`).
+   - Clicking an open node and choosing one of the 3 **Rulings** (`●A ≻ ▲C`, `■B ≻ ●A`, or `▲C ≻ ■B`) cuts one link of the cycle, sides with that voting bloc, and crowns a winner for that election.
+5. **How You Move & Why Arrow's Theorem Traps You**:
+   - Each step moves to a **neighboring election** where **5 Senators keep the exact same ballot and just 1 Senator switches blocs** (**Single-Voter Shift**).
+   - If you ever place all 3 different rulings around a single unit triangle (**Arrovian Paradox Triad**), your Constitution has contradicted itself across a 1-Senator shift—allowing **1 single Senator** to override the other 5 unchanging Senators and unmasking them as the **Hidden Dictator**!
+   - By **Arrow's Impossibility Theorem** (and Sperner's Lemma), adjudicating 100% of the open elections without a Dictator is **mathematically impossible**. Your challenge: *How many elections can you adjudicate before the theorem corners you?*
 
-### 1.2 Concrete 3-Candidate & 6-Voter Senate Visualization (`v0.3.0-alpha`)
+### 1.2 Concrete 3-Candidate & 6-Voter Senate Visualization (`v0.3.0`)
 To make it immediately obvious **WHO** the 3 candidates and $n=6$ voters are, **WHAT** circular deadlock is occurring at the selected node, **WHY** the Architect must rule, and **WHICH** voter is the Dictator:
 1. **Concrete 3-Candidate System (Shape + Color + Name + Cycle-Breaking Meaning)**:
    - **Candidate A (`● Atlas` — Crimson Circle `#f43f5e`)**: Championed by Faction $G_0$ (`●A ≻ ■B ≻ ▲C`). Ruling `●A ≻ ▲C` breaks the cycle (`Cuts ▲C≻●A → ●A (Atlas) Wins`).
    - **Candidate B (`■ Boreas` — Emerald Square `#10b981`)**: Championed by Faction $G_1$ (`■B ≻ ▲C ≻ ●A`). Ruling `■B ≻ ●A` breaks the cycle (`Cuts ●A≻■B → ■B (Boreas) Wins`).
    - **Candidate C (`▲ Cybele` — Indigo Triangle `#6366f1`)**: Championed by Faction $G_2$ (`▲C ≻ ●A ≻ ■B`). Ruling `▲C ≻ ■B` breaks the cycle (`Cuts ■B≻▲C → ▲C (Cybele) Wins`).
    - Colored lattice nodes and radial choice pills render the geometric shape (`●`, `■`, `▲`) alongside the pairwise ruling.
-2. **On-Board 6-Voter Senate Roster & Live Dictator Identification (`VoterRosterBar.tsx` + `LatticeBoard.tsx`)**:
-   - Displays the $n$ individual voters directly above the board (`V1 · Ada`, `V2 · Blaise`, `V3 · Condorcet`, `V4 · Dodgson`, `V5 · Emmy`, `V6 · Kenneth` for $n=6$; up to $n=12$).
-   - Color-codes each Voter Card by their Faction block ($G_0, G_1, G_2$) at the active/hovered profile $(k_0, k_1, k_2)$ and badges the exact voter who flipped their ballot (`⚡ Flipped Ballot`) when $d(u, v) = 1$ from `lastMove`.
-   - Displays live Dictator status on each Voter Card (`⚠️ ARMED DICTATOR`, `🔍 SUSPECT`, `✅ CLEARED`, and `👑 DICTATOR UNMASKED` at game over) and labels `👑 Dictator: Voter #d` directly on the losing triangle on the SVG board.
+2. **On-Board 6-Voter Senate Roster & 3-Bloc Faction Grouping (`VoterRosterBar.tsx` + `App.tsx`)**:
+   - **Section 2.1 — Fixing the Initial / Unselected Roster State (`activeCoord === null`)**:
+     - When `hoveredVertexId === null && selectedVertexId === null && gameState.lastMove === null`, `App.tsx` passes `activeCoord = null` (no silent `(2, 2, 2)` fallback).
+     - `VoterRosterBar.tsx` displays the 6 Senators (`V1 · Ada` … `V6 · Kenneth`) with their live Possible Dictator Status (`⚠️ ARMED DICTATOR`, `🔍 SUSPECT`, `✅ CLEARED`) and a clear prompt: *"Hover or click any election node (k₀, k₁, k₂) below to inspect how the 6 Senators split into the 3 Voting Blocs (G₀, G₁, G₂) in that scenario."*
+   - **Section 2.2 — Grouping Senators by the 3 Voting Blocs ($G_0, G_1, G_2$) When a Node Is Inspected**:
+     - When `activeCoord = [k₀, k₁, k₂]` is active, `VoterRosterBar.tsx` visually groups the 6 Senators into **3 explicit Voting Bloc containers** (`Bloc G₀: k₀ Senators · ●A ≻ ■B ≻ ▲C`, `Bloc G₁: k₁ Senators · ■B ≻ ▲C ≻ ●A`, `Bloc G₂: k₂ Senators · ▲C ≻ ●A ≻ ■B`), showing `"0 Senators in this bloc"` when $k_i = 0$ on a border node.
+     - Preserves individual Senator badges (`⚡ Flipped Ballot` when stepping from `lastMove`, and `👑 DICTATOR UNMASKED` / `⚠️ ARMED DICTATOR` / `🔍 SUSPECT` / `✅ CLEARED`).
 3. **"Why You Must Rule" Election Deadlock Case Prompt (`ColorPicker.tsx`)**:
    - Displays a 2-line **"Election Deadlock Case"** summary banner above the 3 ruling cards when inspecting an open interior node (`The Problem` + `Your Job as Constitutional Architect`), and shows **Crowned Winner** + **Voters Empowered** (`Sides with V1 (1 voter) over V2–V6 (5 voters)`) on each Ruling Card and Radial Option.
 

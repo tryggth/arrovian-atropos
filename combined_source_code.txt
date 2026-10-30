@@ -1,7 +1,7 @@
 ================================================================================
- ARROVIAN ATROPOS PWA (v0.2.6) - COMBINED SOURCE CODE BUNDLE
- Generated on: 2026-10-29T22:35:06.732Z
- Total Source Files: 26
+ ARROVIAN ATROPOS PWA (v0.2.7) - COMBINED SOURCE CODE BUNDLE
+ Generated on: 2026-10-30T01:02:23.976Z
+ Total Source Files: 27
 ================================================================================
 
 
@@ -132,33 +132,50 @@ This project enforces a strict **2-level sub-agent routing architecture** using 
 
 # SPEC: Arrovian Atropos PWA (Progressive Web App)
 
-- **Document Version**: `0.3.0-alpha`
+- **Document Version**: `0.3.0`
 - **Target Agent**: `agy` (Google Antigravity CLI)
 - **Source of Truth Notebook**: `Hidden Dictator Game` (`notebooks/2b675003-edce-43bf-91cd-5d0ee2c33f77`)
 
 ---
 
-## 1. Executive Summary & Pedagogical Mission
+## 1. Executive Summary & Player Narrative ("The Constitutional Architect's Briefing")
 
 **Arrovian Atropos** is an interactive, offline-capable Progressive Web App (PWA) that unifies **Burke & Teng's (2008) combinatorial game *Atropos*** with **Tanaka's / Sperner's topological proof of Arrow's Impossibility Theorem**.
 
-### 1.1 The Constitutional Architect's Dilemma (Solo Constitutional Puzzle)
-- **The Core Arrovian Insight**: By Arrow's Impossibility Theorem (and Sperner's Lemma), if a **single Constitutional Architect** tries to adjudicate every divided preference profile on the board while respecting **Unanimity (Pareto)** on the boundary and **Independence of Irrelevant Alternatives (IIA)** locally, **it is mathematically impossible to complete the constitution without creating an intransitive Condorcet cycle / unmasking a Pivotal Dictator**.
-- **Gameplay ("The Constitutional Architect's Dilemma")**:
-  - The user acts as the **Constitutional Architect** stepping from profile to profile via **Single-Voter Shifts ($k=1$)**, trying to adjudicate as many divided preference profiles as possible without triggering a Condorcet Paradox or unmasking a Hidden Dictator.
-  - Because Arrow's Theorem guarantees the puzzle has **no complete solution** (0% survival rate at 100% completion), the player experiences Arrow's Impossibility Theorem firsthand as safe rulings narrow down until a final profile forces a Dictator/Paradox under all 3 choices.
+### 1.1 The Player's Mental Model & Narrative Briefing (`BriefingBanner.tsx`)
+To ensure a first-time player immediately understands **who they are**, **what the board represents**, **why voters share ballots in 3 blocs**, and **why they must issue rulings**, the app features a clear, collapsible **"Constitutional Architect's Briefing"** card at the top of the workspace (plus a `? Briefing / Story` toggle button in `HeaderControls.tsx`):
+1. **Your Role — The Constitutional Architect**:
+   - You are drafting the **Constitution ($F$)** for a **6-Senator Council** (`V1 · Ada` through `V6 · Kenneth`) voting on 3 rival candidates: `● Atlas (A)`, `■ Boreas (B)`, and `▲ Cybele (C)`.
+2. **What Each Node Is — A "What-If" Election Scenario $(k_0, k_1, k_2)$**:
+   - The Senators do **not** have fixed ballots for the whole game. Instead, every circle $(k_0, k_1, k_2)$ on the triangular map is a **different possible election** where the 6 Senators split into **3 Voting Blocs (Factions)**:
+     - **Bloc $G_0$ ($k_0$ Senators)**: Vote `●A ≻ ■B ≻ ▲C`
+     - **Bloc $G_1$ ($k_1$ Senators)**: Vote `■B ≻ ▲C ≻ ●A`
+     - **Bloc $G_2$ ($k_2$ Senators)**: Vote `▲C ≻ ●A ≻ ■B`
+   - Because there are 6 Senators and only 3 Voting Blocs, Senators in the same bloc cast identical ballots at that node.
+3. **Why the Border Is Pre-Colored — The Unanimity Rule**:
+   - On the outer edges of the triangle, one bloc has **0 Senators** ($k_i = 0$). That means **all 6 Senators unanimously agree** on one pair of candidates (e.g., when $k_0 = 0$, all 6 Senators rank `▲C ≻ ●A`). A valid Constitution cannot violate a 6–0 unanimous vote, so the border elections are already settled.
+4. **Why You Must Rule on the Interior — Breaking the Circular Tie**:
+   - On every open interior node, all 3 blocs have at least 1 Senator, creating a **Rock-Paper-Scissors circular tie** (`●A ≻ ■B ≻ ▲C ≻ ●A`).
+   - Clicking an open node and choosing one of the 3 **Rulings** (`●A ≻ ▲C`, `■B ≻ ●A`, or `▲C ≻ ■B`) cuts one link of the cycle, sides with that voting bloc, and crowns a winner for that election.
+5. **How You Move & Why Arrow's Theorem Traps You**:
+   - Each step moves to a **neighboring election** where **5 Senators keep the exact same ballot and just 1 Senator switches blocs** (**Single-Voter Shift**).
+   - If you ever place all 3 different rulings around a single unit triangle (**Arrovian Paradox Triad**), your Constitution has contradicted itself across a 1-Senator shift—allowing **1 single Senator** to override the other 5 unchanging Senators and unmasking them as the **Hidden Dictator**!
+   - By **Arrow's Impossibility Theorem** (and Sperner's Lemma), adjudicating 100% of the open elections without a Dictator is **mathematically impossible**. Your challenge: *How many elections can you adjudicate before the theorem corners you?*
 
-### 1.2 Concrete 3-Candidate & 6-Voter Senate Visualization (`v0.3.0-alpha`)
+### 1.2 Concrete 3-Candidate & 6-Voter Senate Visualization (`v0.3.0`)
 To make it immediately obvious **WHO** the 3 candidates and $n=6$ voters are, **WHAT** circular deadlock is occurring at the selected node, **WHY** the Architect must rule, and **WHICH** voter is the Dictator:
 1. **Concrete 3-Candidate System (Shape + Color + Name + Cycle-Breaking Meaning)**:
    - **Candidate A (`● Atlas` — Crimson Circle `#f43f5e`)**: Championed by Faction $G_0$ (`●A ≻ ■B ≻ ▲C`). Ruling `●A ≻ ▲C` breaks the cycle (`Cuts ▲C≻●A → ●A (Atlas) Wins`).
    - **Candidate B (`■ Boreas` — Emerald Square `#10b981`)**: Championed by Faction $G_1$ (`■B ≻ ▲C ≻ ●A`). Ruling `■B ≻ ●A` breaks the cycle (`Cuts ●A≻■B → ■B (Boreas) Wins`).
    - **Candidate C (`▲ Cybele` — Indigo Triangle `#6366f1`)**: Championed by Faction $G_2$ (`▲C ≻ ●A ≻ ■B`). Ruling `▲C ≻ ■B` breaks the cycle (`Cuts ■B≻▲C → ▲C (Cybele) Wins`).
    - Colored lattice nodes and radial choice pills render the geometric shape (`●`, `■`, `▲`) alongside the pairwise ruling.
-2. **On-Board 6-Voter Senate Roster & Live Dictator Identification (`VoterRosterBar.tsx` + `LatticeBoard.tsx`)**:
-   - Displays the $n$ individual voters directly above the board (`V1 · Ada`, `V2 · Blaise`, `V3 · Condorcet`, `V4 · Dodgson`, `V5 · Emmy`, `V6 · Kenneth` for $n=6$; up to $n=12$).
-   - Color-codes each Voter Card by their Faction block ($G_0, G_1, G_2$) at the active/hovered profile $(k_0, k_1, k_2)$ and badges the exact voter who flipped their ballot (`⚡ Flipped Ballot`) when $d(u, v) = 1$ from `lastMove`.
-   - Displays live Dictator status on each Voter Card (`⚠️ ARMED DICTATOR`, `🔍 SUSPECT`, `✅ CLEARED`, and `👑 DICTATOR UNMASKED` at game over) and labels `👑 Dictator: Voter #d` directly on the losing triangle on the SVG board.
+2. **On-Board 6-Voter Senate Roster & 3-Bloc Faction Grouping (`VoterRosterBar.tsx` + `App.tsx`)**:
+   - **Section 2.1 — Fixing the Initial / Unselected Roster State (`activeCoord === null`)**:
+     - When `hoveredVertexId === null && selectedVertexId === null && gameState.lastMove === null`, `App.tsx` passes `activeCoord = null` (no silent `(2, 2, 2)` fallback).
+     - `VoterRosterBar.tsx` displays the 6 Senators (`V1 · Ada` … `V6 · Kenneth`) with their live Possible Dictator Status (`⚠️ ARMED DICTATOR`, `🔍 SUSPECT`, `✅ CLEARED`) and a clear prompt: *"Hover or click any election node (k₀, k₁, k₂) below to inspect how the 6 Senators split into the 3 Voting Blocs (G₀, G₁, G₂) in that scenario."*
+   - **Section 2.2 — Grouping Senators by the 3 Voting Blocs ($G_0, G_1, G_2$) When a Node Is Inspected**:
+     - When `activeCoord = [k₀, k₁, k₂]` is active, `VoterRosterBar.tsx` visually groups the 6 Senators into **3 explicit Voting Bloc containers** (`Bloc G₀: k₀ Senators · ●A ≻ ■B ≻ ▲C`, `Bloc G₁: k₁ Senators · ■B ≻ ▲C ≻ ●A`, `Bloc G₂: k₂ Senators · ▲C ≻ ●A ≻ ■B`), showing `"0 Senators in this bloc"` when $k_i = 0$ on a border node.
+     - Preserves individual Senator badges (`⚡ Flipped Ballot` when stepping from `lastMove`, and `👑 DICTATOR UNMASKED` / `⚠️ ARMED DICTATOR` / `🔍 SUSPECT` / `✅ CLEARED`).
 3. **"Why You Must Rule" Election Deadlock Case Prompt (`ColorPicker.tsx`)**:
    - Displays a 2-line **"Election Deadlock Case"** summary banner above the 3 ruling cards when inspecting an open interior node (`The Problem` + `Your Job as Constitutional Architect`), and shows **Crowned Winner** + **Voters Empowered** (`Sides with V1 (1 voter) over V2–V6 (5 voters)`) on each Ruling Card and Radial Option.
 
@@ -355,7 +372,7 @@ To match the established `agy` deployment pattern used across sibling PWA projec
 {
   "name": "arrovian-atropos",
   "private": true,
-  "version": "0.2.6",
+  "version": "0.2.7",
   "type": "module",
   "description": "Arrovian Atropos PWA — Sperner's Lemma & Arrow's Impossibility Theorem Game",
   "scripts": {
@@ -402,10 +419,10 @@ To match the established `agy` deployment pattern used across sibling PWA projec
 
 {
   "name": "Arrovian Atropos PWA",
-  "version": "v0.2.6",
-  "buildVersion": "arrovian-atropos-v0.2.6-2eaf0ec-1793313306692",
-  "commitSha": "2eaf0ec",
-  "timestamp": 1793313306692
+  "version": "v0.2.7",
+  "buildVersion": "arrovian-atropos-v0.2.7-1778561-1793322143943",
+  "commitSha": "1778561",
+  "timestamp": 1793322143943
 }
 
 
@@ -500,6 +517,7 @@ import { InspectorPanel } from './components/InspectorPanel';
 import { PossibleDictatorsPanel } from './components/PossibleDictatorsPanel';
 import { DictatorModal } from './components/DictatorModal';
 import { VoterRosterBar } from './components/VoterRosterBar';
+import { BriefingBanner } from './components/BriefingBanner';
 import { Compass, Footprints, ScrollText, ShieldAlert } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -511,6 +529,7 @@ export const App: React.FC = () => {
     createInitialGameState(DEFAULT_BOARD_SIZE, 'arrow-1951')
   );
 
+  const [showBriefing, setShowBriefing] = useState<boolean>(true);
   const [selectedVertexId, setSelectedVertexId] = useState<VertexId | null>(
     null
   );
@@ -617,19 +636,15 @@ export const App: React.FC = () => {
   const lastMoveVertex = gameState.lastMove
     ? gameState.graph.vertices.get(gameState.lastMove) ?? null
     : null;
-  const defaultCenterCoord: BarycentricCoord = [
-    Math.floor(boardSize / 3),
-    Math.floor(boardSize / 3),
-    boardSize - 2 * Math.floor(boardSize / 3),
-  ];
-  const activeRosterCoord = inspectedVertex?.coord ?? defaultCenterCoord;
+  const activeRosterCoord: BarycentricCoord | null =
+    inspectedVertex?.coord ?? null;
   const activeRosterLabel = hoveredVertexId
     ? 'Hovered Node'
     : selectedVertexId
       ? 'Selected Node'
       : gameState.lastMove
         ? 'Precedent Anchor'
-        : 'Center Divided Profile';
+        : 'Idle — Hover or Click Any Node';
 
   const totalDividedProfiles = gameState.graph.interiorIds.length;
   const adjudicatedProfiles = gameState.moveHistory.length;
@@ -648,6 +663,8 @@ export const App: React.FC = () => {
         showPossibleDictators={showPossibleDictators}
         possibleDictatorCount={dictatorAnalysis.activeCandidateVoterIds.length}
         onTogglePossibleDictators={() => setShowPossibleDictators((prev) => !prev)}
+        showBriefing={showBriefing}
+        onToggleBriefing={() => setShowBriefing((prev) => !prev)}
         appVersion={appVersion}
         hasUpdate={hasUpdate}
         latestVersion={latestVersion}
@@ -663,6 +680,12 @@ export const App: React.FC = () => {
       <main className="mx-auto grid w-full max-w-7xl flex-1 grid-cols-1 gap-5 px-4 py-4 sm:px-6 lg:grid-cols-12">
         {/* Left / Center Column: Status Banner, Simplex Board & Ruling Chambers */}
         <div className="flex flex-col gap-4 lg:col-span-8">
+          <BriefingBanner
+            n={boardSize}
+            isOpen={showBriefing}
+            onToggle={() => setShowBriefing((prev) => !prev)}
+          />
+
           {/* Active Step / Post-Mortem Banner */}
           {gameState.status === 'playing' ? (
             <div className="flex flex-col gap-2.5 rounded-2xl border border-slate-800/90 bg-slate-900/80 px-4 py-3 shadow-lg">
@@ -1599,6 +1622,45 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       expect(screen.queryByTestId('possible-dictators-panel')).toBeNull();
     });
 
+    it('renders the 5-step player narrative briefing banner by default and allows toggling it closed and open', () => {
+      render(React.createElement(App));
+
+      // 1. briefing-banner renders by default with all 5 steps
+      const banner = screen.getByTestId('briefing-banner');
+      expect(banner).toBeDefined();
+      expect(screen.getByTestId('briefing-step-1')).toBeDefined();
+      expect(screen.getByTestId('briefing-step-2')).toBeDefined();
+      expect(screen.getByTestId('briefing-step-3')).toBeDefined();
+      expect(screen.getByTestId('briefing-step-4')).toBeDefined();
+      expect(screen.getByTestId('briefing-step-5')).toBeDefined();
+
+      expect(screen.getByTestId('briefing-step-1').textContent).toContain(
+        'Writing the Constitution (F) for a 6-Senator Council (V1 · Ada .. V6 · Kenneth)'
+      );
+      expect(screen.getByTestId('briefing-step-2').textContent).toContain(
+        'A "What-If" Election Scenario'
+      );
+      expect(screen.getByTestId('briefing-step-3').textContent).toContain(
+        'Pareto Unanimity'
+      );
+      expect(screen.getByTestId('briefing-step-4').textContent).toContain(
+        'cuts one link of the cycle and crowns a winner'
+      );
+      expect(screen.getByTestId('briefing-step-5').textContent).toContain(
+        'unmasking the Hidden Dictator'
+      );
+
+      // 2. Click dismiss-briefing-button to close
+      const dismissBtn = screen.getByTestId('dismiss-briefing-button');
+      fireEvent.click(dismissBtn);
+      expect(screen.queryByTestId('briefing-banner')).toBeNull();
+
+      // 3. Click toggle-briefing-button in HeaderControls to re-open
+      const toggleBtn = screen.getByTestId('toggle-briefing-button');
+      fireEvent.click(toggleBtn);
+      expect(screen.getByTestId('briefing-banner')).toBeDefined();
+    });
+
     it('renders the concrete 6-voter roster bar with candidate pills and live dictator badges, displays election deadlock case banner, crowned winner, and voters empowered on selection, and displays flipped ballot on adjacent hover', () => {
       render(React.createElement(App));
 
@@ -1616,7 +1678,21 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
         '▲C (Cybele)'
       );
 
-      // Verify Voters V1 through V6
+      // Initial Step 1 idle state prompt
+      const idlePrompt = screen.getByTestId('roster-idle-prompt');
+      expect(idlePrompt.textContent).toContain(
+        'Hover or click any election node (k₀, k₁, k₂) below to inspect how the 6 Senators split into the 3 Voting Blocs (G₀, G₁, G₂) in that scenario.'
+      );
+
+      // Verify Voters V1 through V6 have data-faction="none" and live dictator status badges
+      for (let voterId = 1; voterId <= 6; voterId++) {
+        const card = screen.getByTestId(`voter-card-${voterId}`);
+        expect(card.getAttribute('data-faction')).toBe('none');
+        expect(
+          screen.getByTestId(`voter-dictator-badge-${voterId}`)
+        ).toBeDefined();
+      }
+
       expect(screen.getByTestId('voter-card-1').textContent).toContain('V1 · Ada');
       expect(screen.getByTestId('voter-card-2').textContent).toContain('V2 · Blaise');
       expect(screen.getByTestId('voter-card-3').textContent).toContain('V3 · Condorcet');
@@ -1640,6 +1716,23 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       // 2. Select (2,2,2)
       const centerNode = screen.getByTestId('vertex-2,2,2');
       fireEvent.click(centerNode);
+
+      // Idle prompt is removed
+      expect(screen.queryByTestId('roster-idle-prompt')).toBeNull();
+
+      // 3 Voting Bloc containers are rendered
+      expect(screen.getByTestId('voting-bloc-container-0')).toBeDefined();
+      expect(screen.getByTestId('voting-bloc-container-1')).toBeDefined();
+      expect(screen.getByTestId('voting-bloc-container-2')).toBeDefined();
+      expect(screen.getByTestId('voting-bloc-header-0').textContent).toContain(
+        'Bloc G₀: 2 Senators · ●A ≻ ■B ≻ ▲C'
+      );
+      expect(screen.getByTestId('voting-bloc-header-1').textContent).toContain(
+        'Bloc G₁: 2 Senators · ■B ≻ ▲C ≻ ●A'
+      );
+      expect(screen.getByTestId('voting-bloc-header-2').textContent).toContain(
+        'Bloc G₂: 2 Senators · ▲C ≻ ●A ≻ ■B'
+      );
 
       // Election Deadlock Case Banner renders
       const deadlockBanner = screen.getByTestId('election-deadlock-case-banner');
@@ -1672,9 +1765,148 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
 
       const flipCallout = screen.getByTestId('flipped-voter-callout');
       expect(flipCallout.textContent).toContain('V2 · Blaise flipped ballot');
+
+      // 4. Hover boundary corner (6, 0, 0) and verify Bloc G₀: 6 Senators and empty-bloc-1 and empty-bloc-2
+      const topCorner = screen.getByTestId('vertex-6,0,0');
+      fireEvent.mouseEnter(topCorner);
+
+      expect(screen.getByTestId('voting-bloc-header-0').textContent).toContain(
+        'Bloc G₀: 6 Senators'
+      );
+      expect(screen.getByTestId('empty-bloc-1').textContent).toContain(
+        '0 Senators in this bloc'
+      );
+      expect(screen.getByTestId('empty-bloc-2').textContent).toContain(
+        '0 Senators in this bloc'
+      );
     });
   });
 });
+
+
+
+/* =============================================================================
+ * FILE: src/components/BriefingBanner.tsx
+ * ============================================================================= */
+
+import React from 'react';
+import { BookOpen, X } from 'lucide-react';
+import { getVoterName } from '../engine/barycentric';
+
+export interface BriefingBannerProps {
+  readonly n: number;
+  readonly isOpen: boolean;
+  readonly onToggle: () => void;
+}
+
+export const BriefingBanner: React.FC<BriefingBannerProps> = ({
+  n,
+  isOpen,
+  onToggle,
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      data-testid="briefing-banner"
+      className="rounded-2xl border border-indigo-500/40 bg-slate-900/90 p-4 shadow-xl backdrop-blur-md"
+    >
+      {/* Header Row */}
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-indigo-500/20 pb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-indigo-500/40 bg-indigo-500/20 text-indigo-300">
+            <BookOpen className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-slate-100">
+              The Constitutional Architect&apos;s Briefing
+            </h2>
+            <p className="text-xs text-indigo-300/80">
+              5-Step Mental Model: How the {n}-Senator Council &amp; Arrow&apos;s Impossibility Trap Work
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          data-testid="dismiss-briefing-button"
+          onClick={onToggle}
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs font-semibold text-slate-300 transition-colors hover:border-slate-600 hover:bg-slate-700 hover:text-slate-100"
+        >
+          <X className="h-3.5 w-3.5" />
+          <span>Hide Briefing</span>
+        </button>
+      </div>
+
+      {/* 5-Step Mental Model Grid */}
+      <div className="grid grid-cols-1 gap-2.5 md:grid-cols-5">
+        {/* Step 1 */}
+        <div
+          data-testid="briefing-step-1"
+          className="flex flex-col gap-1.5 rounded-xl border border-indigo-500/20 bg-slate-950/60 p-3"
+        >
+          <div className="font-mono text-xs font-bold text-indigo-300">
+            1. Your Role
+          </div>
+          <p className="text-xs leading-relaxed text-slate-300">
+            Writing the Constitution (F) for a {n}-Senator Council (V1 · Ada .. V{n} · {getVoterName(n)}) choosing among 3 candidates: ● Atlas, ■ Boreas, and ▲ Cybele.
+          </p>
+        </div>
+
+        {/* Step 2 */}
+        <div
+          data-testid="briefing-step-2"
+          className="flex flex-col gap-1.5 rounded-xl border border-indigo-500/20 bg-slate-950/60 p-3"
+        >
+          <div className="font-mono text-xs font-bold text-indigo-300">
+            2. What a Node (k₀, k₁, k₂) Is
+          </div>
+          <p className="text-xs leading-relaxed text-slate-300">
+            A &quot;What-If&quot; Election Scenario where the {n} Senators split into 3 Voting Blocs (G₀: k₀, G₁: k₁, G₂: k₂)—which is why Senators in the same bloc cast identical ballots at that node.
+          </p>
+        </div>
+
+        {/* Step 3 */}
+        <div
+          data-testid="briefing-step-3"
+          className="flex flex-col gap-1.5 rounded-xl border border-indigo-500/20 bg-slate-950/60 p-3"
+        >
+          <div className="font-mono text-xs font-bold text-indigo-300">
+            3. Why the Border Is Pre-Colored
+          </div>
+          <p className="text-xs leading-relaxed text-slate-300">
+            On the border (kᵢ = 0), one bloc has 0 Senators, so all {n} Senators unanimously agree on a pair (Pareto Unanimity). A valid Constitution cannot violate a {n}–0 unanimous vote.
+          </p>
+        </div>
+
+        {/* Step 4 */}
+        <div
+          data-testid="briefing-step-4"
+          className="flex flex-col gap-1.5 rounded-xl border border-indigo-500/20 bg-slate-950/60 p-3"
+        >
+          <div className="font-mono text-xs font-bold text-indigo-300">
+            4. Why You Must Rule on the Interior
+          </div>
+          <p className="text-xs leading-relaxed text-slate-300">
+            Every interior node has a 3-bloc Rock-Paper-Scissors circular tie (●A ≻ ■B ≻ ▲C ≻ ●A). Your Ruling (●A ≻ ▲C, ■B ≻ ●A, or ▲C ≻ ■B) cuts one link of the cycle and crowns a winner.
+          </p>
+        </div>
+
+        {/* Step 5 */}
+        <div
+          data-testid="briefing-step-5"
+          className="flex flex-col gap-1.5 rounded-xl border border-indigo-500/20 bg-slate-950/60 p-3"
+        >
+          <div className="font-mono text-xs font-bold text-indigo-300">
+            5. The Single-Voter Shift &amp; Hidden Dictator Trap
+          </div>
+          <p className="text-xs leading-relaxed text-slate-300">
+            Each step shifts 1 Senator&apos;s ballot while {n - 1} Senators stay fixed. Surrounding any unit triangle with all 3 rulings lets 1 single Senator flip society&apos;s outcome against the other {n - 1}—unmasking the Hidden Dictator! By Arrow&apos;s Theorem, 100% completion is impossible; see how many elections you can adjudicate before the theorem corners you.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 
 
@@ -2133,7 +2365,7 @@ export const DictatorModal: React.FC<DictatorModalProps> = ({
  * ============================================================================= */
 
 import React from 'react';
-import { Dices, RotateCcw, Eye, Triangle, Sparkles, Radar } from 'lucide-react';
+import { Dices, RotateCcw, Eye, Triangle, Sparkles, Radar, BookOpen } from 'lucide-react';
 import { BOARD_SIZES } from '../engine/barycentric';
 
 export interface HeaderControlsProps {
@@ -2143,6 +2375,8 @@ export interface HeaderControlsProps {
   readonly showPossibleDictators: boolean;
   readonly possibleDictatorCount: number;
   readonly onTogglePossibleDictators: () => void;
+  readonly showBriefing?: boolean;
+  readonly onToggleBriefing?: () => void;
   readonly appVersion?: string;
   readonly hasUpdate?: boolean;
   readonly latestVersion?: string | null;
@@ -2160,6 +2394,8 @@ export const HeaderControls: React.FC<HeaderControlsProps> = ({
   showPossibleDictators,
   possibleDictatorCount,
   onTogglePossibleDictators,
+  showBriefing = false,
+  onToggleBriefing,
   appVersion = 'v0.2.0',
   hasUpdate = false,
   latestVersion = null,
@@ -2258,6 +2494,24 @@ export const HeaderControls: React.FC<HeaderControlsProps> = ({
               New Border
             </span>
           </button>
+
+          {/* 5-Step Narrative Briefing Toggle */}
+          {onToggleBriefing && (
+            <button
+              type="button"
+              data-testid="toggle-briefing-button"
+              onClick={onToggleBriefing}
+              title="Toggle Constitutional Architect 5-Step Briefing"
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                showBriefing
+                  ? 'border-indigo-500/50 bg-indigo-500/20 text-indigo-200 shadow-sm'
+                  : 'border-slate-800 bg-slate-900/90 text-slate-300 hover:border-slate-700 hover:text-slate-100'
+              }`}
+            >
+              <BookOpen className="h-3.5 w-3.5 text-indigo-400" />
+              <span>? Briefing / Story</span>
+            </button>
+          )}
 
           {/* Accessible Profile Rulings Toggle */}
           <button
@@ -3529,6 +3783,7 @@ import React from 'react';
 import {
   BarycentricCoord,
   CANDIDATES,
+  getVoterLabel,
   RULING_COLORS,
   RulingColor,
 } from '../engine/barycentric';
@@ -3541,7 +3796,7 @@ import {
 
 export interface VoterRosterBarProps {
   readonly n: number;
-  readonly activeCoord: BarycentricCoord;
+  readonly activeCoord: BarycentricCoord | null;
   readonly activeCoordLabel: string;
   readonly lastMoveCoord: BarycentricCoord | null;
   readonly dictatorAnalysis: PossibleDictatorsAnalysis;
@@ -3550,6 +3805,7 @@ export interface VoterRosterBarProps {
 }
 
 const CANDIDATE_KEYS: readonly RulingColor[] = [0, 1, 2];
+const BLOCS: readonly RulingColor[] = [0, 1, 2];
 
 function getDictatorBadgeClass(status: VoterDictatorStatus): string {
   switch (status) {
@@ -3564,7 +3820,21 @@ function getDictatorBadgeClass(status: VoterDictatorStatus): string {
   }
 }
 
+function getDictatorBadgeText(status: VoterDictatorStatus): string {
+  switch (status) {
+    case 'unmasked':
+      return '👑 DICTATOR UNMASKED';
+    case 'armed':
+      return '⚠️ ARMED DICTATOR';
+    case 'cleared':
+      return '✅ CLEARED';
+    case 'viable':
+      return '🔍 SUSPECT';
+  }
+}
+
 export const VoterRosterBar: React.FC<VoterRosterBarProps> = ({
+  n,
   activeCoord,
   activeCoordLabel,
   lastMoveCoord,
@@ -3572,15 +3842,9 @@ export const VoterRosterBar: React.FC<VoterRosterBarProps> = ({
   hoveredDictatorId,
   onHoverDictator,
 }) => {
-  const seats = buildElectorateRosterAtProfile(
-    activeCoord,
-    lastMoveCoord,
-    dictatorAnalysis
-  );
-  const flipped = computeFlippedVoterBetweenProfiles(
-    lastMoveCoord,
-    activeCoord
-  );
+  const flipped = activeCoord
+    ? computeFlippedVoterBetweenProfiles(lastMoveCoord, activeCoord)
+    : null;
 
   return (
     <div
@@ -3619,7 +3883,9 @@ export const VoterRosterBar: React.FC<VoterRosterBarProps> = ({
             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/90 px-2.5 py-1 font-mono text-xs text-slate-200"
           >
             <span className="font-semibold text-sky-300">
-              Profile ({activeCoord.join(', ')}) · {activeCoordLabel}
+              {activeCoord === null
+                ? `Awaiting Scenario Selection · ${activeCoordLabel}`
+                : `Profile (${activeCoord.join(', ')}) · ${activeCoordLabel}`}
             </span>
           </div>
 
@@ -3634,71 +3900,193 @@ export const VoterRosterBar: React.FC<VoterRosterBarProps> = ({
         </div>
       </div>
 
-      {/* Voter Cards Grid */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6">
-        {seats.map((seat) => {
-          const isHovered = hoveredDictatorId === seat.voterId;
-          return (
-            <div
-              key={seat.voterId}
-              data-testid={`voter-card-${seat.voterId}`}
-              data-faction={seat.blockLabel}
-              data-dictator-status={seat.dictatorStatus}
-              onMouseEnter={() => onHoverDictator(seat.voterId)}
-              onMouseLeave={() => onHoverDictator(null)}
-              className={`group relative flex flex-col justify-between rounded-xl border border-slate-800 bg-slate-950/75 p-2.5 transition-all ${
-                isHovered
-                  ? 'ring-2 ring-sky-400 bg-slate-900 shadow-lg'
-                  : 'hover:border-slate-700 hover:bg-slate-900/60'
-              } ${seat.isFlippedFromLastMove ? 'ring-1 ring-amber-400/60' : ''}`}
-              style={{ borderLeftColor: seat.hexColor, borderLeftWidth: 4 }}
-            >
-              <div>
-                <div className="mb-1.5 flex items-center justify-between gap-1">
-                  <span className="font-mono text-xs font-bold text-slate-100">
-                    {seat.fullLabel}
-                  </span>
-                  <span
-                    className="rounded px-1.5 py-0.5 font-mono text-[10px] font-bold"
-                    style={{
-                      backgroundColor: `${seat.hexColor}25`,
-                      color: seat.hexColor,
-                    }}
-                  >
-                    {seat.blockLabel}
-                  </span>
-                </div>
+      {/* Main Roster Body */}
+      {activeCoord === null ? (
+        /* Branch 1: Idle Initial State (no profile selected/hovered) */
+        <div className="flex flex-col gap-3">
+          <div
+            data-testid="roster-idle-prompt"
+            className="rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-2 text-center text-xs text-indigo-200"
+          >
+            Hover or click any election node (k₀, k₁, k₂) below to inspect how the {n} Senators split into the 3 Voting Blocs (G₀, G₁, G₂) in that scenario.
+          </div>
 
-                <div className="font-mono text-[11px] font-semibold text-slate-200">
-                  {seat.shapedRanking}
-                </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6">
+            {dictatorAnalysis.voterSummaries.map((v) => {
+              const isHovered = hoveredDictatorId === v.voterId;
+              return (
+                <div
+                  key={v.voterId}
+                  data-testid={`voter-card-${v.voterId}`}
+                  data-faction="none"
+                  data-dictator-status={v.status}
+                  onMouseEnter={() => onHoverDictator(v.voterId)}
+                  onMouseLeave={() => onHoverDictator(null)}
+                  className={`group relative flex flex-col justify-between rounded-xl border border-slate-800 bg-slate-950/75 p-2.5 transition-all ${
+                    isHovered
+                      ? 'ring-2 ring-sky-400 bg-slate-900 shadow-lg'
+                      : 'hover:border-slate-700 hover:bg-slate-900/60'
+                  }`}
+                  style={{ borderLeftColor: '#64748b', borderLeftWidth: 4 }}
+                >
+                  <div>
+                    <div className="mb-1 flex items-center justify-between gap-1">
+                      <span className="font-mono text-xs font-bold text-slate-100">
+                        {getVoterLabel(v.voterId)}
+                      </span>
+                    </div>
 
-                {seat.isFlippedFromLastMove && (
-                  <div className="mt-1.5">
+                    <div className="text-[11px] text-slate-400">
+                      Select a node (k₀, k₁, k₂) to view bloc ballot
+                    </div>
+                  </div>
+
+                  <div className="mt-2.5 border-t border-slate-800/80 pt-1.5">
                     <span
-                      data-testid={`flipped-voter-badge-${seat.voterId}`}
-                      className="inline-flex items-center gap-1 rounded bg-amber-400 px-1.5 py-0.5 font-mono text-[9.5px] font-black text-slate-950 shadow"
+                      data-testid={`voter-dictator-badge-${v.voterId}`}
+                      className={`inline-block w-full text-center rounded border px-1.5 py-0.5 font-mono text-[9.5px] ${getDictatorBadgeClass(
+                        v.status
+                      )}`}
                     >
-                      ⚡ Flipped Ballot
+                      {getDictatorBadgeText(v.status)}
                     </span>
                   </div>
-                )}
-              </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        /* Branch 2: Active Scenario Profile — Grouped by Voting Blocs */
+        (() => {
+          const seats = buildElectorateRosterAtProfile(
+            activeCoord,
+            lastMoveCoord,
+            dictatorAnalysis
+          );
 
-              <div className="mt-2.5 border-t border-slate-800/80 pt-1.5">
-                <span
-                  data-testid={`voter-dictator-badge-${seat.voterId}`}
-                  className={`inline-block w-full text-center rounded border px-1.5 py-0.5 font-mono text-[9.5px] ${getDictatorBadgeClass(
-                    seat.dictatorStatus
-                  )}`}
-                >
-                  {seat.dictatorBadgeText}
-                </span>
-              </div>
+          return (
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              {BLOCS.map((b) => {
+                const meta = RULING_COLORS[b];
+                const blocCount = activeCoord[b];
+                const blocSeats = seats.filter((s) => s.blockIndex === b);
+
+                return (
+                  <div
+                    key={b}
+                    data-testid={`voting-bloc-container-${b}`}
+                    className="flex flex-col rounded-xl border bg-slate-950/70 p-2.5 shadow-md"
+                    style={{ borderColor: `${meta.hexFill}50` }}
+                  >
+                    {/* Bloc Header */}
+                    <div
+                      data-testid={`voting-bloc-header-${b}`}
+                      className="mb-2 flex flex-col gap-1 border-b pb-2"
+                      style={{ borderColor: `${meta.hexFill}30` }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span
+                          className="font-mono text-xs font-bold"
+                          style={{ color: meta.hexFill }}
+                        >
+                          Bloc {meta.coalitionBlock}: {blocCount} Senator{blocCount === 1 ? '' : 's'} · {meta.shapedCoalitionRanking}
+                        </span>
+                      </div>
+                      <div>
+                        <span
+                          className="rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold"
+                          style={{
+                            backgroundColor: `${meta.hexFill}20`,
+                            color: meta.hexFill,
+                          }}
+                        >
+                          Supports Ruling {meta.shapedRuling}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Bloc Body: Empty or List of Senators */}
+                    {blocSeats.length === 0 ? (
+                      <div
+                        data-testid={`empty-bloc-${b}`}
+                        className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-slate-800/80 p-3 text-center font-mono text-xs text-slate-500"
+                      >
+                        0 Senators in this bloc
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        {blocSeats.map((seat) => {
+                          const isHovered = hoveredDictatorId === seat.voterId;
+                          return (
+                            <div
+                              key={seat.voterId}
+                              data-testid={`voter-card-${seat.voterId}`}
+                              data-faction={seat.blockLabel}
+                              data-dictator-status={seat.dictatorStatus}
+                              onMouseEnter={() => onHoverDictator(seat.voterId)}
+                              onMouseLeave={() => onHoverDictator(null)}
+                              className={`group relative flex flex-col justify-between rounded-xl border border-slate-800 bg-slate-900/80 p-2 transition-all ${
+                                isHovered
+                                  ? 'ring-2 ring-sky-400 bg-slate-900 shadow-lg'
+                                  : 'hover:border-slate-700 hover:bg-slate-900/60'
+                              } ${seat.isFlippedFromLastMove ? 'ring-1 ring-amber-400/60' : ''}`}
+                              style={{ borderLeftColor: seat.hexColor, borderLeftWidth: 4 }}
+                            >
+                              <div>
+                                <div className="mb-1 flex items-center justify-between gap-1">
+                                  <span className="font-mono text-xs font-bold text-slate-100">
+                                    {seat.fullLabel}
+                                  </span>
+                                  <span
+                                    className="rounded px-1.5 py-0.5 font-mono text-[10px] font-bold"
+                                    style={{
+                                      backgroundColor: `${seat.hexColor}25`,
+                                      color: seat.hexColor,
+                                    }}
+                                  >
+                                    {seat.blockLabel}
+                                  </span>
+                                </div>
+
+                                <div className="font-mono text-[11px] font-semibold text-slate-200">
+                                  {seat.shapedRanking}
+                                </div>
+
+                                {seat.isFlippedFromLastMove && (
+                                  <div className="mt-1">
+                                    <span
+                                      data-testid={`flipped-voter-badge-${seat.voterId}`}
+                                      className="inline-flex items-center gap-1 rounded bg-amber-400 px-1.5 py-0.5 font-mono text-[9.5px] font-black text-slate-950 shadow"
+                                    >
+                                      ⚡ Flipped Ballot
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="mt-2 border-t border-slate-800/80 pt-1.5">
+                                <span
+                                  data-testid={`voter-dictator-badge-${seat.voterId}`}
+                                  className={`inline-block w-full text-center rounded border px-1.5 py-0.5 font-mono text-[9.5px] ${getDictatorBadgeClass(
+                                    seat.dictatorStatus
+                                  )}`}
+                                >
+                                  {seat.dictatorBadgeText}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           );
-        })}
-      </div>
+        })()
+      )}
     </div>
   );
 };

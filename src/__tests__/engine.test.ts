@@ -637,6 +637,45 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       expect(screen.queryByTestId('possible-dictators-panel')).toBeNull();
     });
 
+    it('renders the 5-step player narrative briefing banner by default and allows toggling it closed and open', () => {
+      render(React.createElement(App));
+
+      // 1. briefing-banner renders by default with all 5 steps
+      const banner = screen.getByTestId('briefing-banner');
+      expect(banner).toBeDefined();
+      expect(screen.getByTestId('briefing-step-1')).toBeDefined();
+      expect(screen.getByTestId('briefing-step-2')).toBeDefined();
+      expect(screen.getByTestId('briefing-step-3')).toBeDefined();
+      expect(screen.getByTestId('briefing-step-4')).toBeDefined();
+      expect(screen.getByTestId('briefing-step-5')).toBeDefined();
+
+      expect(screen.getByTestId('briefing-step-1').textContent).toContain(
+        'Writing the Constitution (F) for a 6-Senator Council (V1 · Ada .. V6 · Kenneth)'
+      );
+      expect(screen.getByTestId('briefing-step-2').textContent).toContain(
+        'A "What-If" Election Scenario'
+      );
+      expect(screen.getByTestId('briefing-step-3').textContent).toContain(
+        'Pareto Unanimity'
+      );
+      expect(screen.getByTestId('briefing-step-4').textContent).toContain(
+        'cuts one link of the cycle and crowns a winner'
+      );
+      expect(screen.getByTestId('briefing-step-5').textContent).toContain(
+        'unmasking the Hidden Dictator'
+      );
+
+      // 2. Click dismiss-briefing-button to close
+      const dismissBtn = screen.getByTestId('dismiss-briefing-button');
+      fireEvent.click(dismissBtn);
+      expect(screen.queryByTestId('briefing-banner')).toBeNull();
+
+      // 3. Click toggle-briefing-button in HeaderControls to re-open
+      const toggleBtn = screen.getByTestId('toggle-briefing-button');
+      fireEvent.click(toggleBtn);
+      expect(screen.getByTestId('briefing-banner')).toBeDefined();
+    });
+
     it('renders the concrete 6-voter roster bar with candidate pills and live dictator badges, displays election deadlock case banner, crowned winner, and voters empowered on selection, and displays flipped ballot on adjacent hover', () => {
       render(React.createElement(App));
 
@@ -654,7 +693,21 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
         '▲C (Cybele)'
       );
 
-      // Verify Voters V1 through V6
+      // Initial Step 1 idle state prompt
+      const idlePrompt = screen.getByTestId('roster-idle-prompt');
+      expect(idlePrompt.textContent).toContain(
+        'Hover or click any election node (k₀, k₁, k₂) below to inspect how the 6 Senators split into the 3 Voting Blocs (G₀, G₁, G₂) in that scenario.'
+      );
+
+      // Verify Voters V1 through V6 have data-faction="none" and live dictator status badges
+      for (let voterId = 1; voterId <= 6; voterId++) {
+        const card = screen.getByTestId(`voter-card-${voterId}`);
+        expect(card.getAttribute('data-faction')).toBe('none');
+        expect(
+          screen.getByTestId(`voter-dictator-badge-${voterId}`)
+        ).toBeDefined();
+      }
+
       expect(screen.getByTestId('voter-card-1').textContent).toContain('V1 · Ada');
       expect(screen.getByTestId('voter-card-2').textContent).toContain('V2 · Blaise');
       expect(screen.getByTestId('voter-card-3').textContent).toContain('V3 · Condorcet');
@@ -678,6 +731,23 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       // 2. Select (2,2,2)
       const centerNode = screen.getByTestId('vertex-2,2,2');
       fireEvent.click(centerNode);
+
+      // Idle prompt is removed
+      expect(screen.queryByTestId('roster-idle-prompt')).toBeNull();
+
+      // 3 Voting Bloc containers are rendered
+      expect(screen.getByTestId('voting-bloc-container-0')).toBeDefined();
+      expect(screen.getByTestId('voting-bloc-container-1')).toBeDefined();
+      expect(screen.getByTestId('voting-bloc-container-2')).toBeDefined();
+      expect(screen.getByTestId('voting-bloc-header-0').textContent).toContain(
+        'Bloc G₀: 2 Senators · ●A ≻ ■B ≻ ▲C'
+      );
+      expect(screen.getByTestId('voting-bloc-header-1').textContent).toContain(
+        'Bloc G₁: 2 Senators · ■B ≻ ▲C ≻ ●A'
+      );
+      expect(screen.getByTestId('voting-bloc-header-2').textContent).toContain(
+        'Bloc G₂: 2 Senators · ▲C ≻ ●A ≻ ■B'
+      );
 
       // Election Deadlock Case Banner renders
       const deadlockBanner = screen.getByTestId('election-deadlock-case-banner');
@@ -710,6 +780,20 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
 
       const flipCallout = screen.getByTestId('flipped-voter-callout');
       expect(flipCallout.textContent).toContain('V2 · Blaise flipped ballot');
+
+      // 4. Hover boundary corner (6, 0, 0) and verify Bloc G₀: 6 Senators and empty-bloc-1 and empty-bloc-2
+      const topCorner = screen.getByTestId('vertex-6,0,0');
+      fireEvent.mouseEnter(topCorner);
+
+      expect(screen.getByTestId('voting-bloc-header-0').textContent).toContain(
+        'Bloc G₀: 6 Senators'
+      );
+      expect(screen.getByTestId('empty-bloc-1').textContent).toContain(
+        '0 Senators in this bloc'
+      );
+      expect(screen.getByTestId('empty-bloc-2').textContent).toContain(
+        '0 Senators in this bloc'
+      );
     });
   });
 });

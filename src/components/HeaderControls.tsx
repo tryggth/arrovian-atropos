@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dices, RotateCcw, Eye, Triangle, Sparkles, Radar } from 'lucide-react';
+import { Dices, RotateCcw, Eye, Triangle, Sparkles, Radar, BookOpen } from 'lucide-react';
 import { BOARD_SIZES } from '../engine/barycentric';
 
 export interface HeaderControlsProps {
@@ -9,6 +9,8 @@ export interface HeaderControlsProps {
   readonly showPossibleDictators: boolean;
   readonly possibleDictatorCount: number;
   readonly onTogglePossibleDictators: () => void;
+  readonly showBriefing?: boolean;
+  readonly onToggleBriefing?: () => void;
   readonly appVersion?: string;
   readonly hasUpdate?: boolean;
   readonly latestVersion?: string | null;
@@ -26,6 +28,8 @@ export const HeaderControls: React.FC<HeaderControlsProps> = ({
   showPossibleDictators,
   possibleDictatorCount,
   onTogglePossibleDictators,
+  showBriefing = false,
+  onToggleBriefing,
   appVersion = 'v0.2.0',
   hasUpdate = false,
   latestVersion = null,
@@ -124,6 +128,24 @@ export const HeaderControls: React.FC<HeaderControlsProps> = ({
               New Border
             </span>
           </button>
+
+          {/* 5-Step Narrative Briefing Toggle */}
+          {onToggleBriefing && (
+            <button
+              type="button"
+              data-testid="toggle-briefing-button"
+              onClick={onToggleBriefing}
+              title="Toggle Constitutional Architect 5-Step Briefing"
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                showBriefing
+                  ? 'border-indigo-500/50 bg-indigo-500/20 text-indigo-200 shadow-sm'
+                  : 'border-slate-800 bg-slate-900/90 text-slate-300 hover:border-slate-700 hover:text-slate-100'
+              }`}
+            >
+              <BookOpen className="h-3.5 w-3.5 text-indigo-400" />
+              <span>? Briefing / Story</span>
+            </button>
+          )}
 
           {/* Accessible Profile Rulings Toggle */}
           <button
