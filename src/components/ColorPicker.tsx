@@ -154,7 +154,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
             className="mb-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-100"
           >
             <div className="font-semibold text-amber-200">
-              The Problem: At ({k0}, {k1}, {k2}), the {n} voters are locked in a circular tie (●A ≻ ■B ≻ ▲C ≻ ●A) because two factions always team up against the third ({k0 + k2} voters want ●A ≻ ■B, {k0 + k1} want ■B ≻ ▲C, {k1 + k2} want ▲C ≻ ●A).
+              The Problem: At ({k0}, {k1}, {k2}), the {n} voters are locked in a circular tie (● Pizza ≻ ■ Tacos ≻ ▲ Sushi ≻ ● Pizza) because two factions always team up against the third ({k0 + k2} voters want ● Pizza ≻ ■ Tacos, {k0 + k1} want ■ Tacos ≻ ▲ Sushi, {k1 + k2} want ▲ Sushi ≻ ● Pizza).
             </div>
             <div className="mt-1 text-slate-300">
               Your Job as Constitutional Architect: Pick which link of the cycle to overturn (and which Faction of voters gets to win this election) without contradicting a neighboring election where only 1 voter changed their mind!
@@ -187,7 +187,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
               type="button"
               disabled={disabled}
               onClick={handleClick}
-              data-testid={`color-picker-btn-${c}`}
+              data-testid={`ruling-button-${c}`}
               className={`group relative flex flex-col justify-between rounded-xl border p-3 text-left transition-all ${
                 disabled
                   ? 'cursor-not-allowed border-slate-800 bg-slate-900/40 opacity-50'
@@ -198,7 +198,10 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                       : 'border-slate-800 bg-slate-900/60 hover:border-slate-700 hover:bg-slate-800/60'
               }`}
             >
-              <div className="flex items-start justify-between gap-2">
+              <div
+                data-testid={`color-picker-btn-${c}`}
+                className="flex w-full items-start justify-between gap-2"
+              >
                 <div className="flex items-start gap-2.5">
                   <span
                     className="flex h-8 w-14 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-black text-slate-950 shadow-sm"
@@ -210,17 +213,29 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                     {meta.shapedBadge}
                   </span>
                   <div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <span className="font-mono text-sm font-bold text-slate-100">
                         Ruling {meta.ruling}
                       </span>
+                      <span
+                        className="rounded px-1.5 py-0.5 font-mono text-[10px] font-bold"
+                        style={{
+                          backgroundColor: `${meta.hexFill}20`,
+                          color: meta.hexFill,
+                        }}
+                      >
+                        {meta.teamName}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 text-xs font-black text-amber-300">
+                      {meta.crownedWinnerShort}
                     </div>
                     <div className="text-[11px] font-medium text-slate-400">
                       Empowers {meta.coalitionBlock} ({meta.coalitionRanking})
                     </div>
                     <div
                       data-testid={`crowned-winner-${c}`}
-                      className="mt-0.5 text-[11px] font-bold text-amber-300"
+                      className="mt-0.5 text-[11px] font-bold text-slate-300"
                     >
                       {meta.crownedWinnerText}
                     </div>

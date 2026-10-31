@@ -209,7 +209,7 @@ export const VoterRosterBar: React.FC<VoterRosterBarProps> = ({
                           className="font-mono text-xs font-bold"
                           style={{ color: meta.hexFill }}
                         >
-                          Bloc {meta.coalitionBlock}: {blocCount} Senator{blocCount === 1 ? '' : 's'} · {meta.shapedCoalitionRanking}
+                          {meta.teamName} (Bloc {meta.coalitionBlock}): {blocCount} Senator{blocCount === 1 ? '' : 's'} · {meta.shapedCoalitionRanking}
                         </span>
                       </div>
                       <div>

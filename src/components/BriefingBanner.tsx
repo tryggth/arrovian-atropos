@@ -57,7 +57,7 @@ export const BriefingBanner: React.FC<BriefingBannerProps> = ({
             1. Your Role
           </div>
           <p className="text-xs leading-relaxed text-slate-300">
-            Writing the Constitution (F) for a {n}-Senator Council (V1 · Ada .. V{n} · {getVoterName(n)}) choosing among 3 candidates: ● Atlas, ■ Boreas, and ▲ Cybele.
+            Writing the Constitution (F) for {n} Friends / Senators (V1 · Ada .. V{n} · {getVoterName(n)}) Picking Dinner among 3 options: ● Pizza (A), ■ Tacos (B), and ▲ Sushi (C).
           </p>
         </div>
 
@@ -70,7 +70,7 @@ export const BriefingBanner: React.FC<BriefingBannerProps> = ({
             2. What a Node (k₀, k₁, k₂) Is
           </div>
           <p className="text-xs leading-relaxed text-slate-300">
-            A &quot;What-If&quot; Election Scenario where the {n} Senators split into 3 Voting Blocs (G₀: k₀, G₁: k₁, G₂: k₂)—which is why Senators in the same bloc cast identical ballots at that node.
+            A &quot;What-If&quot; Dinner Split (Election Scenario) where the {n} Friends split into 3 Dinner Teams (Team Pizza / Bloc G₀: k₀, Team Tacos / Bloc G₁: k₁, Team Sushi / Bloc G₂: k₂)—which is why Friends in the same team cast identical ballots at that node.
           </p>
         </div>
 
@@ -80,10 +80,10 @@ export const BriefingBanner: React.FC<BriefingBannerProps> = ({
           className="flex flex-col gap-1.5 rounded-xl border border-indigo-500/20 bg-slate-950/60 p-3"
         >
           <div className="font-mono text-xs font-bold text-indigo-300">
-            3. Why the Border Is Pre-Colored
+            3. Why the Border Is Pre-Colored (Pareto Unanimity)
           </div>
           <p className="text-xs leading-relaxed text-slate-300">
-            On the border (kᵢ = 0), one bloc has 0 Senators, so all {n} Senators unanimously agree on a pair (Pareto Unanimity). A valid Constitution cannot violate a {n}–0 unanimous vote.
+            On the outer edges (kᵢ = 0), one team has 0 friends (0 on Team Sushi, 0 on Team Pizza, 0 on Team Tacos), so all {n} unanimously prefer one option over another and the eliminated option cannot win (Pareto Unanimity).
           </p>
         </div>
 
@@ -93,10 +93,10 @@ export const BriefingBanner: React.FC<BriefingBannerProps> = ({
           className="flex flex-col gap-1.5 rounded-xl border border-indigo-500/20 bg-slate-950/60 p-3"
         >
           <div className="font-mono text-xs font-bold text-indigo-300">
-            4. Why You Must Rule on the Interior
+            4. Why You Must Rule on the Interior (3-Way Tie-Breaker)
           </div>
           <p className="text-xs leading-relaxed text-slate-300">
-            Every interior node has a 3-bloc Rock-Paper-Scissors circular tie (●A ≻ ■B ≻ ▲C ≻ ●A). Your Ruling (●A ≻ ▲C, ■B ≻ ●A, or ▲C ≻ ■B) cuts one link of the cycle and crowns a winner.
+            Every interior split has a 3-way Rock-Paper-Scissors circular tie (● Pizza ≻ ■ Tacos ≻ ▲ Sushi ≻ ● Pizza). Your ruling cuts one link of the cycle and crowns a winner (● Pizza (A) Wins, ■ Tacos (B) Wins, or ▲ Sushi (C) Wins).
           </p>
         </div>
 
@@ -106,10 +106,10 @@ export const BriefingBanner: React.FC<BriefingBannerProps> = ({
           className="flex flex-col gap-1.5 rounded-xl border border-indigo-500/20 bg-slate-950/60 p-3"
         >
           <div className="font-mono text-xs font-bold text-indigo-300">
-            5. The Single-Voter Shift &amp; Hidden Dictator Trap
+            5. The 1-Friend Shift &amp; Hidden Dictator Trap
           </div>
           <p className="text-xs leading-relaxed text-slate-300">
-            Each step shifts 1 Senator&apos;s ballot while {n - 1} Senators stay fixed. Surrounding any unit triangle with all 3 rulings lets 1 single Senator flip society&apos;s outcome against the other {n - 1}—unmasking the Hidden Dictator! By Arrow&apos;s Theorem, 100% completion is impossible; see how many elections you can adjudicate before the theorem corners you.
+            Each step moves 1 Friend between Dinner Teams while the other {n - 1} stay put. Surrounding any unit triangle with all 3 winners (Pizza, Tacos, Sushi) lets 1 single Friend flip the group&apos;s dinner choice against the other {n - 1}—unmasking the Hidden Dictator! By Arrow&apos;s Theorem, 100% completion is impossible; see how many elections you can adjudicate before the theorem corners you.
           </p>
         </div>
       </div>

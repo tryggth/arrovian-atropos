@@ -413,13 +413,13 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
 
     it('verifies CANDIDATES metadata, getVoterLabel, computeFlippedVoterBetweenProfiles, formatVotersEmpoweredText, and buildElectorateRosterAtProfile', () => {
       // 1. CANDIDATES metadata
-      expect(CANDIDATES[0].fullLabel).toBe('●A (Atlas)');
+      expect(CANDIDATES[0].fullLabel).toBe('● Pizza (A)');
       expect(CANDIDATES[0].shape).toBe('●');
       expect(CANDIDATES[0].hexColor).toBe('#f43f5e');
-      expect(CANDIDATES[1].fullLabel).toBe('■B (Boreas)');
+      expect(CANDIDATES[1].fullLabel).toBe('■ Tacos (B)');
       expect(CANDIDATES[1].shape).toBe('■');
       expect(CANDIDATES[1].hexColor).toBe('#10b981');
-      expect(CANDIDATES[2].fullLabel).toBe('▲C (Cybele)');
+      expect(CANDIDATES[2].fullLabel).toBe('▲ Sushi (C)');
       expect(CANDIDATES[2].shape).toBe('▲');
       expect(CANDIDATES[2].hexColor).toBe('#6366f1');
 
@@ -460,14 +460,14 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       expect(seats.length).toBe(6);
       expect(seats[0].fullLabel).toBe('V1 · Ada');
       expect(seats[0].blockLabel).toBe('G₀');
-      expect(seats[0].shapedRanking).toBe('●A ≻ ■B ≻ ▲C');
-      expect(seats[0].championedCandidate).toBe('●A (Atlas)');
+      expect(seats[0].shapedRanking).toBe('● Pizza ≻ ■ Tacos ≻ ▲ Sushi');
+      expect(seats[0].championedCandidate).toBe('● Pizza (A)');
       expect(seats[2].fullLabel).toBe('V3 · Condorcet');
       expect(seats[2].blockLabel).toBe('G₁');
-      expect(seats[2].shapedRanking).toBe('■B ≻ ▲C ≻ ●A');
+      expect(seats[2].shapedRanking).toBe('■ Tacos ≻ ▲ Sushi ≻ ● Pizza');
       expect(seats[4].fullLabel).toBe('V5 · Emmy');
       expect(seats[4].blockLabel).toBe('G₂');
-      expect(seats[4].shapedRanking).toBe('▲C ≻ ●A ≻ ■B');
+      expect(seats[4].shapedRanking).toBe('▲ Sushi ≻ ● Pizza ≻ ■ Tacos');
 
       // Check flipped flag when lastMove is adjacent
       const adjacentSeats = buildElectorateRosterAtProfile([1, 3, 2], [2, 2, 2], analysis);
@@ -707,10 +707,10 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       expect(screen.getByTestId('briefing-step-5')).toBeDefined();
 
       expect(screen.getByTestId('briefing-step-1').textContent).toContain(
-        'Writing the Constitution (F) for a 6-Senator Council (V1 · Ada .. V6 · Kenneth)'
+        'Writing the Constitution (F) for 6 Friends / Senators (V1 · Ada .. V6 · Kenneth) Picking Dinner'
       );
       expect(screen.getByTestId('briefing-step-2').textContent).toContain(
-        'A "What-If" Election Scenario'
+        'A "What-If" Dinner Split (Election Scenario)'
       );
       expect(screen.getByTestId('briefing-step-3').textContent).toContain(
         'Pareto Unanimity'
@@ -741,13 +741,13 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       expect(rosterBar).toBeDefined();
 
       expect(screen.getByTestId('candidate-pill-0').textContent).toContain(
-        '●A (Atlas)'
+        '● Pizza (A)'
       );
       expect(screen.getByTestId('candidate-pill-1').textContent).toContain(
-        '■B (Boreas)'
+        '■ Tacos (B)'
       );
       expect(screen.getByTestId('candidate-pill-2').textContent).toContain(
-        '▲C (Cybele)'
+        '▲ Sushi (C)'
       );
 
       // Initial Step 1 idle state prompt
@@ -797,13 +797,13 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       expect(screen.getByTestId('voting-bloc-container-1')).toBeDefined();
       expect(screen.getByTestId('voting-bloc-container-2')).toBeDefined();
       expect(screen.getByTestId('voting-bloc-header-0').textContent).toContain(
-        'Bloc G₀: 2 Senators · ●A ≻ ■B ≻ ▲C'
+        'Team Pizza (Bloc G₀): 2 Senators · ● Pizza ≻ ■ Tacos ≻ ▲ Sushi'
       );
       expect(screen.getByTestId('voting-bloc-header-1').textContent).toContain(
-        'Bloc G₁: 2 Senators · ■B ≻ ▲C ≻ ●A'
+        'Team Tacos (Bloc G₁): 2 Senators · ■ Tacos ≻ ▲ Sushi ≻ ● Pizza'
       );
       expect(screen.getByTestId('voting-bloc-header-2').textContent).toContain(
-        'Bloc G₂: 2 Senators · ▲C ≻ ●A ≻ ■B'
+        'Team Sushi (Bloc G₂): 2 Senators · ▲ Sushi ≻ ● Pizza ≻ ■ Tacos'
       );
 
       // Election Deadlock Case Banner renders
@@ -823,7 +823,7 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
 
       // Crowned Winner and Voters Empowered
       const crowned0 = screen.getByTestId('crowned-winner-0');
-      expect(crowned0.textContent).toContain('Cuts ▲C≻●A → ●A (Atlas) Wins');
+      expect(crowned0.textContent).toContain('Cuts ▲Sushi≻●Pizza → ● Pizza (A) Wins');
 
       const empowered0 = screen.getByTestId('voters-empowered-0');
       expect(empowered0.textContent).toContain(
@@ -857,7 +857,7 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       fireEvent.mouseEnter(topCorner);
 
       expect(screen.getByTestId('voting-bloc-header-0').textContent).toContain(
-        'Bloc G₀: 6 Senators'
+        'Team Pizza (Bloc G₀): 6 Senators'
       );
       expect(screen.getByTestId('empty-bloc-1').textContent).toContain(
         '0 Senators in this bloc'

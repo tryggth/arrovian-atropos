@@ -21,36 +21,40 @@ export type VertexId = string;
 
 export interface CandidateMetadata {
   readonly id: 'A' | 'B' | 'C';
-  readonly name: 'Atlas' | 'Boreas' | 'Cybele';
+  readonly name: 'Pizza' | 'Tacos' | 'Sushi';
   readonly shape: '●' | '■' | '▲';
   readonly shortTag: '●A' | '■B' | '▲C';
-  readonly fullLabel: '●A (Atlas)' | '■B (Boreas)' | '▲C (Cybele)';
+  readonly fullLabel: '● Pizza (A)' | '■ Tacos (B)' | '▲ Sushi (C)';
+  readonly teamName: 'Team Pizza' | 'Team Tacos' | 'Team Sushi';
   readonly hexColor: string;
 }
 
 export const CANDIDATES: Record<RulingColor, CandidateMetadata> = {
   0: {
     id: 'A',
-    name: 'Atlas',
+    name: 'Pizza',
     shape: '●',
     shortTag: '●A',
-    fullLabel: '●A (Atlas)',
+    fullLabel: '● Pizza (A)',
+    teamName: 'Team Pizza',
     hexColor: '#f43f5e',
   },
   1: {
     id: 'B',
-    name: 'Boreas',
+    name: 'Tacos',
     shape: '■',
     shortTag: '■B',
-    fullLabel: '■B (Boreas)',
+    fullLabel: '■ Tacos (B)',
+    teamName: 'Team Tacos',
     hexColor: '#10b981',
   },
   2: {
     id: 'C',
-    name: 'Cybele',
+    name: 'Sushi',
     shape: '▲',
     shortTag: '▲C',
-    fullLabel: '▲C (Cybele)',
+    fullLabel: '▲ Sushi (C)',
+    teamName: 'Team Sushi',
     hexColor: '#6366f1',
   },
 };
@@ -92,25 +96,26 @@ export interface ColorMetadata {
   readonly ruling: string;
   readonly shortBadge: string;
   readonly candidateId: 'A' | 'B' | 'C';
-  readonly candidateName: 'Atlas' | 'Boreas' | 'Cybele';
+  readonly candidateName: 'Pizza' | 'Tacos' | 'Sushi';
   readonly candidateShape: '●' | '■' | '▲';
-  readonly candidateFullLabel: '●A (Atlas)' | '■B (Boreas)' | '▲C (Cybele)';
+  readonly candidateFullLabel: '● Pizza (A)' | '■ Tacos (B)' | '▲ Sushi (C)';
+  readonly teamName: DinnerTeamName;
   readonly shapedRuling: '●A ≻ ▲C' | '■B ≻ ●A' | '▲C ≻ ■B';
   readonly shapedBadge: '● A≻C' | '■ B≻A' | '▲ C≻B';
   readonly coalitionBlock: 'G₀' | 'G₁' | 'G₂';
   readonly coalitionRanking: string;
   readonly shapedCoalitionRanking:
-    | '●A ≻ ■B ≻ ▲C'
-    | '■B ≻ ▲C ≻ ●A'
-    | '▲C ≻ ●A ≻ ■B';
+    | '● Pizza ≻ ■ Tacos ≻ ▲ Sushi'
+    | '■ Tacos ≻ ▲ Sushi ≻ ● Pizza'
+    | '▲ Sushi ≻ ● Pizza ≻ ■ Tacos';
   readonly crownedWinnerText:
-    | 'Cuts ▲C≻●A → ●A (Atlas) Wins'
-    | 'Cuts ●A≻■B → ■B (Boreas) Wins'
-    | 'Cuts ■B≻▲C → ▲C (Cybele) Wins';
+    | 'Cuts ▲Sushi≻●Pizza → ● Pizza (A) Wins'
+    | 'Cuts ●Pizza≻■Tacos → ■ Tacos (B) Wins'
+    | 'Cuts ■Tacos≻▲Sushi → ▲ Sushi (C) Wins';
   readonly crownedWinnerShort:
-    | '●A (Atlas) Wins'
-    | '■B (Boreas) Wins'
-    | '▲C (Cybele) Wins';
+    | '● Pizza (A) Wins'
+    | '■ Tacos (B) Wins'
+    | '▲ Sushi (C) Wins';
   readonly forbiddenAxis: 0 | 1 | 2;
   readonly unanimousConstraint: string;
   readonly hexFill: string;
@@ -124,18 +129,19 @@ export const RULING_COLORS: Record<RulingColor, ColorMetadata> = {
     ruling: 'A ≻ C',
     shortBadge: 'A≻C',
     candidateId: 'A',
-    candidateName: 'Atlas',
+    candidateName: 'Pizza',
     candidateShape: '●',
-    candidateFullLabel: '●A (Atlas)',
+    candidateFullLabel: '● Pizza (A)',
+    teamName: 'Team Pizza',
     shapedRuling: '●A ≻ ▲C',
     shapedBadge: '● A≻C',
     coalitionBlock: 'G₀',
     coalitionRanking: 'A ≻ B ≻ C',
-    shapedCoalitionRanking: '●A ≻ ■B ≻ ▲C',
-    crownedWinnerText: 'Cuts ▲C≻●A → ●A (Atlas) Wins',
-    crownedWinnerShort: '●A (Atlas) Wins',
+    shapedCoalitionRanking: '● Pizza ≻ ■ Tacos ≻ ▲ Sushi',
+    crownedWinnerText: 'Cuts ▲Sushi≻●Pizza → ● Pizza (A) Wins',
+    crownedWinnerShort: '● Pizza (A) Wins',
     forbiddenAxis: 0,
-    unanimousConstraint: 'Pareto Forbids on k₀ = 0 (Unanimous C ≻ A)',
+    unanimousConstraint: 'Pareto Forbids on k₀ = 0 (Unanimous C ≻ A · ● Pizza Eliminated)',
     hexFill: '#f43f5e',
     hexStroke: '#fda4af',
   },
@@ -145,18 +151,19 @@ export const RULING_COLORS: Record<RulingColor, ColorMetadata> = {
     ruling: 'B ≻ A',
     shortBadge: 'B≻A',
     candidateId: 'B',
-    candidateName: 'Boreas',
+    candidateName: 'Tacos',
     candidateShape: '■',
-    candidateFullLabel: '■B (Boreas)',
+    candidateFullLabel: '■ Tacos (B)',
+    teamName: 'Team Tacos',
     shapedRuling: '■B ≻ ●A',
     shapedBadge: '■ B≻A',
     coalitionBlock: 'G₁',
     coalitionRanking: 'B ≻ C ≻ A',
-    shapedCoalitionRanking: '■B ≻ ▲C ≻ ●A',
-    crownedWinnerText: 'Cuts ●A≻■B → ■B (Boreas) Wins',
-    crownedWinnerShort: '■B (Boreas) Wins',
+    shapedCoalitionRanking: '■ Tacos ≻ ▲ Sushi ≻ ● Pizza',
+    crownedWinnerText: 'Cuts ●Pizza≻■Tacos → ■ Tacos (B) Wins',
+    crownedWinnerShort: '■ Tacos (B) Wins',
     forbiddenAxis: 1,
-    unanimousConstraint: 'Pareto Forbids on k₁ = 0 (Unanimous A ≻ B)',
+    unanimousConstraint: 'Pareto Forbids on k₁ = 0 (Unanimous A ≻ B · ■ Tacos Eliminated)',
     hexFill: '#10b981',
     hexStroke: '#6ee7b7',
   },
@@ -166,18 +173,19 @@ export const RULING_COLORS: Record<RulingColor, ColorMetadata> = {
     ruling: 'C ≻ B',
     shortBadge: 'C≻B',
     candidateId: 'C',
-    candidateName: 'Cybele',
+    candidateName: 'Sushi',
     candidateShape: '▲',
-    candidateFullLabel: '▲C (Cybele)',
+    candidateFullLabel: '▲ Sushi (C)',
+    teamName: 'Team Sushi',
     shapedRuling: '▲C ≻ ■B',
     shapedBadge: '▲ C≻B',
     coalitionBlock: 'G₂',
     coalitionRanking: 'C ≻ A ≻ B',
-    shapedCoalitionRanking: '▲C ≻ ●A ≻ ■B',
-    crownedWinnerText: 'Cuts ■B≻▲C → ▲C (Cybele) Wins',
-    crownedWinnerShort: '▲C (Cybele) Wins',
+    shapedCoalitionRanking: '▲ Sushi ≻ ● Pizza ≻ ■ Tacos',
+    crownedWinnerText: 'Cuts ■Tacos≻▲Sushi → ▲ Sushi (C) Wins',
+    crownedWinnerShort: '▲ Sushi (C) Wins',
     forbiddenAxis: 2,
-    unanimousConstraint: 'Pareto Forbids on k₂ = 0 (Unanimous B ≻ C)',
+    unanimousConstraint: 'Pareto Forbids on k₂ = 0 (Unanimous B ≻ C · ▲ Sushi Eliminated)',
     hexFill: '#6366f1',
     hexStroke: '#a5b4fc',
   },

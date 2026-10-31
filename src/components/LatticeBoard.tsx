@@ -245,7 +245,14 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
             textAnchor="middle"
             className="fill-rose-400 font-bold text-xs"
           >
-            ({n}, 0, 0) · Unanimous G₀: ●A ≻ ■B ≻ ▲C [●A (Atlas) Wins]
+            All {n} on Team Pizza ({n},0,0) → ● Pizza (A) Wins
+            <tspan
+              x={topCorner.x}
+              dy="14"
+              className="fill-slate-400 font-normal text-[10px]"
+            >
+              Unanimous A ≻ B ≻ C · Ruling A ≻ C
+            </tspan>
           </text>
 
           {/* Bottom-Left Unanimous Electorate Corner */}
@@ -255,7 +262,14 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
             textAnchor="start"
             className="fill-emerald-400 font-bold text-xs"
           >
-            (0, {n}, 0) · Unanimous G₁: ■B ≻ ▲C ≻ ●A [■B (Boreas) Wins]
+            All {n} on Team Tacos (0,{n},0) → ■ Tacos (B) Wins
+            <tspan
+              x={bottomLeftCorner.x - 10}
+              dy="14"
+              className="fill-slate-400 font-normal text-[10px]"
+            >
+              Unanimous B ≻ C ≻ A · Ruling B ≻ A
+            </tspan>
           </text>
 
           {/* Bottom-Right Unanimous Electorate Corner */}
@@ -265,39 +279,67 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
             textAnchor="end"
             className="fill-indigo-400 font-bold text-xs"
           >
-            (0, 0, {n}) · Unanimous G₂: ▲C ≻ ●A ≻ ■B [▲C (Cybele) Wins]
+            All {n} on Team Sushi (0,0,{n}) → ▲ Sushi (C) Wins
+            <tspan
+              x={bottomRightCorner.x + 10}
+              dy="14"
+              className="fill-slate-400 font-normal text-[10px]"
+            >
+              Unanimous C ≻ A ≻ B · Ruling C ≻ B
+            </tspan>
           </text>
 
           {/* Left Pareto Boundary Edge (k2 = 0) */}
           <text
             x={leftEdgeMid.x}
-            y={leftEdgeMid.y}
+            y={leftEdgeMid.y - 7}
             textAnchor="middle"
             transform={`rotate(-60, ${leftEdgeMid.x}, ${leftEdgeMid.y})`}
             className="fill-slate-400"
           >
-            No G₂ Voters (k₂ = 0) · Unanimous B ≻ C (Pareto Forbids C ≻ B)
+            0 on Team Sushi (k₂ = 0) · All {n} prefer Tacos ≻ Sushi
+            <tspan
+              x={leftEdgeMid.x}
+              dy="14"
+              className="fill-slate-500 font-normal text-[10px]"
+            >
+              ▲ Sushi Eliminated (Forbids C ≻ B)
+            </tspan>
           </text>
 
           {/* Right Pareto Boundary Edge (k1 = 0) */}
           <text
             x={rightEdgeMid.x}
-            y={rightEdgeMid.y}
+            y={rightEdgeMid.y - 7}
             textAnchor="middle"
             transform={`rotate(60, ${rightEdgeMid.x}, ${rightEdgeMid.y})`}
             className="fill-slate-400"
           >
-            No G₁ Voters (k₁ = 0) · Unanimous A ≻ B (Pareto Forbids B ≻ A)
+            0 on Team Tacos (k₁ = 0) · All {n} prefer Pizza ≻ Tacos
+            <tspan
+              x={rightEdgeMid.x}
+              dy="14"
+              className="fill-slate-500 font-normal text-[10px]"
+            >
+              ■ Tacos Eliminated (Forbids B ≻ A)
+            </tspan>
           </text>
 
           {/* Bottom Pareto Boundary Edge (k0 = 0) */}
           <text
             x={bottomEdgeMid.x}
-            y={bottomEdgeMid.y}
+            y={bottomEdgeMid.y - 7}
             textAnchor="middle"
             className="fill-slate-400"
           >
-            No G₀ Voters (k₀ = 0) · Unanimous C ≻ A (Pareto Forbids A ≻ C)
+            0 on Team Pizza (k₀ = 0) · All {n} prefer Sushi ≻ Pizza
+            <tspan
+              x={bottomEdgeMid.x}
+              dy="14"
+              className="fill-slate-500 font-normal text-[10px]"
+            >
+              ● Pizza Eliminated (Forbids A ≻ C)
+            </tspan>
           </text>
         </g>
 

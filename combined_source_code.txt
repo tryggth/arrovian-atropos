@@ -1,6 +1,6 @@
 ================================================================================
- ARROVIAN ATROPOS PWA (v0.2.8) - COMBINED SOURCE CODE BUNDLE
- Generated on: 2026-10-30T20:08:42.568Z
+ ARROVIAN ATROPOS PWA (v0.2.9) - COMBINED SOURCE CODE BUNDLE
+ Generated on: 2026-10-31T00:07:05.388Z
  Total Source Files: 27
 ================================================================================
 
@@ -138,46 +138,34 @@ This project enforces a strict **2-level sub-agent routing architecture** using 
 
 ---
 
-## 1. Executive Summary & Player Narrative ("The Constitutional Architect's Briefing")
+## 1. Executive Summary & High-Affordance Mental Model ("6 Friends Picking Dinner + 3-Way Tug-of-War")
 
-**Arrovian Atropos** is an interactive, offline-capable Progressive Web App (PWA) that unifies **Burke & Teng's (2008) combinatorial game *Atropos*** with **Tanaka's / Sperner's topological proof of Arrow's Impossibility Theorem**.
+**Arrovian Atropos** is an interactive, offline-capable Progressive Web App (PWA) that unifies **Burke & Teng's (2008) combinatorial game *Atropos*** with **Tanaka's / Sperner's topological proof of Arrow's Impossibility Theorem** using an immediately intuitive everyday mental model alongside formal Social Choice mathematics.
 
-### 1.1 The Player's Mental Model & Narrative Briefing (`BriefingBanner.tsx`)
-To ensure a first-time player immediately understands **who they are**, **what the board represents**, **why voters share ballots in 3 blocs**, and **why they must issue rulings**, the app features a clear, collapsible **"Constitutional Architect's Briefing"** card at the top of the workspace (plus a `? Briefing / Story` toggle button in `HeaderControls.tsx`):
-1. **Your Role — The Constitutional Architect**:
-   - You are drafting the **Constitution ($F$)** for a **6-Senator Council** (`V1 · Ada` through `V6 · Kenneth`) voting on 3 rival candidates: `● Atlas (A)`, `■ Boreas (B)`, and `▲ Cybele (C)`.
-2. **What Each Node Is — A "What-If" Election Scenario $(k_0, k_1, k_2)$**:
-   - The Senators do **not** have fixed ballots for the whole game. Instead, every circle $(k_0, k_1, k_2)$ on the triangular map is a **different possible election** where the 6 Senators split into **3 Voting Blocs (Factions)**:
-     - **Bloc $G_0$ ($k_0$ Senators)**: Vote `●A ≻ ■B ≻ ▲C`
-     - **Bloc $G_1$ ($k_1$ Senators)**: Vote `■B ≻ ▲C ≻ ●A`
-     - **Bloc $G_2$ ($k_2$ Senators)**: Vote `▲C ≻ ●A ≻ ■B`
-   - Because there are 6 Senators and only 3 Voting Blocs, Senators in the same bloc cast identical ballots at that node.
-3. **Why the Border Is Pre-Colored — The Unanimity Rule**:
-   - On the outer edges of the triangle, one bloc has **0 Senators** ($k_i = 0$). That means **all 6 Senators unanimously agree** on one pair of candidates (e.g., when $k_0 = 0$, all 6 Senators rank `▲C ≻ ●A`). A valid Constitution cannot violate a 6–0 unanimous vote, so the border elections are already settled.
-4. **Why You Must Rule on the Interior — Breaking the Circular Tie**:
-   - On every open interior node, all 3 blocs have at least 1 Senator, creating a **Rock-Paper-Scissors circular tie** (`●A ≻ ■B ≻ ▲C ≻ ●A`).
-   - Clicking an open node and choosing one of the 3 **Rulings** (`●A ≻ ▲C`, `■B ≻ ●A`, or `▲C ≻ ■B`) cuts one link of the cycle, sides with that voting bloc, and crowns a winner for that election.
-5. **How You Move & Why Arrow's Theorem Traps You**:
-   - Each step moves to a **neighboring election** where **5 Senators keep the exact same ballot and just 1 Senator switches blocs** (**Single-Voter Shift**).
-   - If you ever place all 3 different rulings around a single unit triangle (**Arrovian Paradox Triad**), your Constitution has contradicted itself across a 1-Senator shift—allowing **1 single Senator** to override the other 5 unchanging Senators and unmasking them as the **Hidden Dictator**!
-   - By **Arrow's Impossibility Theorem** (and Sperner's Lemma), adjudicating 100% of the open elections without a Dictator is **mathematically impossible**. Your challenge: *How many elections can you adjudicate before the theorem corners you?*
+### 1.1 Why "6 Friends Picking Dinner + 3-Way Tug-of-War" (`BriefingBanner.tsx`)
+Users immediately grasp:
+1. **6 Friends (`V1 · Ada` through `V6 · Kenneth`) trying to pick 1 dinner winner** among 3 options:
+   - 🔴 **● Pizza (`A`)** — Crimson Circle (`#f43f5e`)
+   - 🟢 **■ Tacos (`B`)** — Emerald Square (`#10b981`)
+   - 🔵 **▲ Sushi (`C`)** — Indigo Triangle (`#6366f1`)
+2. **A 3-Way Tug-of-War Triangle Map**:
+   - **Top Corner `(6, 0, 0)`**: All 6 friends want **● Pizza (`A`)** 1st $\implies$ **● Pizza (`A`) Wins!**
+   - **Bottom-Left Corner `(0, 6, 0)`**: All 6 friends want **■ Tacos (`B`)** 1st $\implies$ **■ Tacos (`B`) Wins!**
+   - **Bottom-Right Corner `(0, 0, 6)`**: All 6 friends want **▲ Sushi (`C`)** 1st $\implies$ **▲ Sushi (`C`) Wins!**
+   - Moving 1 step toward a corner literally means **1 friend switches their vote toward that corner's dinner team**.
 
-### 1.2 Concrete 3-Candidate & 6-Voter Senate Visualization (`v0.3.0`)
-To make it immediately obvious **WHO** the 3 candidates and $n=6$ voters are, **WHAT** circular deadlock is occurring at the selected node, **WHY** the Architect must rule, and **WHICH** voter is the Dictator:
-1. **Concrete 3-Candidate System (Shape + Color + Name + Cycle-Breaking Meaning)**:
-   - **Candidate A (`● Atlas` — Crimson Circle `#f43f5e`)**: Championed by Faction $G_0$ (`●A ≻ ■B ≻ ▲C`). Ruling `●A ≻ ▲C` breaks the cycle (`Cuts ▲C≻●A → ●A (Atlas) Wins`).
-   - **Candidate B (`■ Boreas` — Emerald Square `#10b981`)**: Championed by Faction $G_1$ (`■B ≻ ▲C ≻ ●A`). Ruling `■B ≻ ●A` breaks the cycle (`Cuts ●A≻■B → ■B (Boreas) Wins`).
-   - **Candidate C (`▲ Cybele` — Indigo Triangle `#6366f1`)**: Championed by Faction $G_2$ (`▲C ≻ ●A ≻ ■B`). Ruling `▲C ≻ ■B` breaks the cycle (`Cuts ■B≻▲C → ▲C (Cybele) Wins`).
-   - Colored lattice nodes and radial choice pills render the geometric shape (`●`, `■`, `▲`) alongside the pairwise ruling.
-2. **On-Board 6-Voter Senate Roster & 3-Bloc Faction Grouping (`VoterRosterBar.tsx` + `App.tsx`)**:
-   - **Section 2.1 — Fixing the Initial / Unselected Roster State (`activeCoord === null`)**:
-     - When `hoveredVertexId === null && selectedVertexId === null && gameState.lastMove === null`, `App.tsx` passes `activeCoord = null` (no silent `(2, 2, 2)` fallback).
-     - `VoterRosterBar.tsx` displays the 6 Senators (`V1 · Ada` … `V6 · Kenneth`) with their live Possible Dictator Status (`⚠️ ARMED DICTATOR`, `🔍 SUSPECT`, `✅ CLEARED`) and a clear prompt: *"Hover or click any election node (k₀, k₁, k₂) below to inspect how the 6 Senators split into the 3 Voting Blocs (G₀, G₁, G₂) in that scenario."*
-   - **Section 2.2 — Grouping Senators by the 3 Voting Blocs ($G_0, G_1, G_2$) When a Node Is Inspected**:
-     - When `activeCoord = [k₀, k₁, k₂]` is active, `VoterRosterBar.tsx` visually groups the 6 Senators into **3 explicit Voting Bloc containers** (`Bloc G₀: k₀ Senators · ●A ≻ ■B ≻ ▲C`, `Bloc G₁: k₁ Senators · ■B ≻ ▲C ≻ ●A`, `Bloc G₂: k₂ Senators · ▲C ≻ ●A ≻ ■B`), showing `"0 Senators in this bloc"` when $k_i = 0$ on a border node.
-     - Preserves individual Senator badges (`⚡ Flipped Ballot` when stepping from `lastMove`, and `👑 DICTATOR UNMASKED` / `⚠️ ARMED DICTATOR` / `🔍 SUSPECT` / `✅ CLEARED`).
-3. **"Why You Must Rule" Election Deadlock Case Prompt (`ColorPicker.tsx`)**:
-   - Displays a 2-line **"Election Deadlock Case"** summary banner above the 3 ruling cards when inspecting an open interior node (`The Problem` + `Your Job as Constitutional Architect`), and shows **Crowned Winner** + **Voters Empowered** (`Sides with V1 (1 voter) over V2–V6 (5 voters)`) on each Ruling Card and Radial Option.
+### 1.2 The 3 Dinner Teams (`VoterRosterBar.tsx` — Why Friends Share Rankings)
+At any node $(k_0, k_1, k_2)$, the 6 friends split into the **3 Rock-Paper-Scissors Dinner Teams**:
+- 🔴 **Team Pizza ($G_0$, $k_0$ friends)**: Rank `● Pizza ≻ ■ Tacos ≻ ▲ Sushi` ($A \succ B \succ C$). Ruling `● A≻C` crowns **● Pizza (`A`) Wins**.
+- 🟢 **Team Tacos ($G_1$, $k_1$ friends)**: Rank `■ Tacos ≻ ▲ Sushi ≻ ● Pizza` ($B \succ C \succ A$). Ruling `■ B≻A` crowns **■ Tacos (`B`) Wins**.
+- 🔵 **Team Sushi ($G_2$, $k_2$ friends)**: Rank `▲ Sushi ≻ ● Pizza ≻ ■ Tacos` ($C \succ A \succ B$). Ruling `▲ C≻B` crowns **▲ Sushi (`C`) Wins**.
+- When `activeCoord === null` (initial idle state), `VoterRosterBar.tsx` shows the 6 friends with their live Dictator Radar status (`⚠️ ARMED DICTATOR`, `🔍 SUSPECT`, `✅ CLEARED`) and prompts the player to hover or click any node $(k_0, k_1, k_2)$.
+- When `activeCoord = [k₀, k₁, k₂]` is active, `VoterRosterBar.tsx` groups the 6 friends into the **3 Dinner Team containers** (`Team Pizza (Bloc G₀)`, `Team Tacos (Bloc G₁)`, `Team Sushi (Bloc G₂)`), showing `"0 Friends on this team"` when $k_i = 0$.
+
+### 1.3 Why the Outer Border Eliminates One Option (Unanimity in Plain English)
+- **Bottom Edge ($k_0 = 0$, 0 friends on Team Pizza)**: Every friend is on Team Tacos or Team Sushi, so **all 6 friends prefer ▲ Sushi (`C`) over ● Pizza (`A`)**. Therefore **● Pizza (`A`) is eliminated** on the bottom edge (Unanimity forbids `0: A ≻ C`).
+- **Right Edge ($k_1 = 0$, 0 friends on Team Tacos)**: All 6 friends prefer **● Pizza (`A`) over ■ Tacos (`B`)**, so **■ Tacos (`B`) is eliminated** on the right edge (Unanimity forbids `1: B ≻ A`).
+- **Left Edge ($k_2 = 0$, 0 friends on Team Sushi)**: All 6 friends prefer **■ Tacos (`B`) over ▲ Sushi (`C`)**, so **▲ Sushi (`C`) is eliminated** on the left edge (Unanimity forbids `2: C ≻ B`).
 
 ### 1.4 The Explicit Two-Beat Turn Logic ("Step 1: The What-If Shift" + "Step 2: Pick the Tie-Breaker Winner") (`v0.4.1`)
 To prevent any confusion about *why* the player steps toward a corner AND independently picks a winning team, every turn is explicitly presented as a **2-Step Cause-and-Effect Prompt** (`describeVoterShift(prevCoord, nextCoord)`) whenever a legal node is hovered or clicked:
@@ -386,7 +374,7 @@ To match the established `agy` deployment pattern used across sibling PWA projec
 {
   "name": "arrovian-atropos",
   "private": true,
-  "version": "0.2.8",
+  "version": "0.2.9",
   "type": "module",
   "description": "Arrovian Atropos PWA — Sperner's Lemma & Arrow's Impossibility Theorem Game",
   "scripts": {
@@ -433,10 +421,10 @@ To match the established `agy` deployment pattern used across sibling PWA projec
 
 {
   "name": "Arrovian Atropos PWA",
-  "version": "v0.2.8",
-  "buildVersion": "arrovian-atropos-v0.2.8-af84ad7-1793390922529",
-  "commitSha": "af84ad7",
-  "timestamp": 1793390922529
+  "version": "v0.2.9",
+  "buildVersion": "arrovian-atropos-v0.2.9-714c216-1793405225313",
+  "commitSha": "714c216",
+  "timestamp": 1793405225313
 }
 
 
@@ -1413,13 +1401,13 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
 
     it('verifies CANDIDATES metadata, getVoterLabel, computeFlippedVoterBetweenProfiles, formatVotersEmpoweredText, and buildElectorateRosterAtProfile', () => {
       // 1. CANDIDATES metadata
-      expect(CANDIDATES[0].fullLabel).toBe('●A (Atlas)');
+      expect(CANDIDATES[0].fullLabel).toBe('● Pizza (A)');
       expect(CANDIDATES[0].shape).toBe('●');
       expect(CANDIDATES[0].hexColor).toBe('#f43f5e');
-      expect(CANDIDATES[1].fullLabel).toBe('■B (Boreas)');
+      expect(CANDIDATES[1].fullLabel).toBe('■ Tacos (B)');
       expect(CANDIDATES[1].shape).toBe('■');
       expect(CANDIDATES[1].hexColor).toBe('#10b981');
-      expect(CANDIDATES[2].fullLabel).toBe('▲C (Cybele)');
+      expect(CANDIDATES[2].fullLabel).toBe('▲ Sushi (C)');
       expect(CANDIDATES[2].shape).toBe('▲');
       expect(CANDIDATES[2].hexColor).toBe('#6366f1');
 
@@ -1460,14 +1448,14 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       expect(seats.length).toBe(6);
       expect(seats[0].fullLabel).toBe('V1 · Ada');
       expect(seats[0].blockLabel).toBe('G₀');
-      expect(seats[0].shapedRanking).toBe('●A ≻ ■B ≻ ▲C');
-      expect(seats[0].championedCandidate).toBe('●A (Atlas)');
+      expect(seats[0].shapedRanking).toBe('● Pizza ≻ ■ Tacos ≻ ▲ Sushi');
+      expect(seats[0].championedCandidate).toBe('● Pizza (A)');
       expect(seats[2].fullLabel).toBe('V3 · Condorcet');
       expect(seats[2].blockLabel).toBe('G₁');
-      expect(seats[2].shapedRanking).toBe('■B ≻ ▲C ≻ ●A');
+      expect(seats[2].shapedRanking).toBe('■ Tacos ≻ ▲ Sushi ≻ ● Pizza');
       expect(seats[4].fullLabel).toBe('V5 · Emmy');
       expect(seats[4].blockLabel).toBe('G₂');
-      expect(seats[4].shapedRanking).toBe('▲C ≻ ●A ≻ ■B');
+      expect(seats[4].shapedRanking).toBe('▲ Sushi ≻ ● Pizza ≻ ■ Tacos');
 
       // Check flipped flag when lastMove is adjacent
       const adjacentSeats = buildElectorateRosterAtProfile([1, 3, 2], [2, 2, 2], analysis);
@@ -1707,10 +1695,10 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       expect(screen.getByTestId('briefing-step-5')).toBeDefined();
 
       expect(screen.getByTestId('briefing-step-1').textContent).toContain(
-        'Writing the Constitution (F) for a 6-Senator Council (V1 · Ada .. V6 · Kenneth)'
+        'Writing the Constitution (F) for 6 Friends / Senators (V1 · Ada .. V6 · Kenneth) Picking Dinner'
       );
       expect(screen.getByTestId('briefing-step-2').textContent).toContain(
-        'A "What-If" Election Scenario'
+        'A "What-If" Dinner Split (Election Scenario)'
       );
       expect(screen.getByTestId('briefing-step-3').textContent).toContain(
         'Pareto Unanimity'
@@ -1741,13 +1729,13 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       expect(rosterBar).toBeDefined();
 
       expect(screen.getByTestId('candidate-pill-0').textContent).toContain(
-        '●A (Atlas)'
+        '● Pizza (A)'
       );
       expect(screen.getByTestId('candidate-pill-1').textContent).toContain(
-        '■B (Boreas)'
+        '■ Tacos (B)'
       );
       expect(screen.getByTestId('candidate-pill-2').textContent).toContain(
-        '▲C (Cybele)'
+        '▲ Sushi (C)'
       );
 
       // Initial Step 1 idle state prompt
@@ -1797,13 +1785,13 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       expect(screen.getByTestId('voting-bloc-container-1')).toBeDefined();
       expect(screen.getByTestId('voting-bloc-container-2')).toBeDefined();
       expect(screen.getByTestId('voting-bloc-header-0').textContent).toContain(
-        'Bloc G₀: 2 Senators · ●A ≻ ■B ≻ ▲C'
+        'Team Pizza (Bloc G₀): 2 Senators · ● Pizza ≻ ■ Tacos ≻ ▲ Sushi'
       );
       expect(screen.getByTestId('voting-bloc-header-1').textContent).toContain(
-        'Bloc G₁: 2 Senators · ■B ≻ ▲C ≻ ●A'
+        'Team Tacos (Bloc G₁): 2 Senators · ■ Tacos ≻ ▲ Sushi ≻ ● Pizza'
       );
       expect(screen.getByTestId('voting-bloc-header-2').textContent).toContain(
-        'Bloc G₂: 2 Senators · ▲C ≻ ●A ≻ ■B'
+        'Team Sushi (Bloc G₂): 2 Senators · ▲ Sushi ≻ ● Pizza ≻ ■ Tacos'
       );
 
       // Election Deadlock Case Banner renders
@@ -1823,7 +1811,7 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
 
       // Crowned Winner and Voters Empowered
       const crowned0 = screen.getByTestId('crowned-winner-0');
-      expect(crowned0.textContent).toContain('Cuts ▲C≻●A → ●A (Atlas) Wins');
+      expect(crowned0.textContent).toContain('Cuts ▲Sushi≻●Pizza → ● Pizza (A) Wins');
 
       const empowered0 = screen.getByTestId('voters-empowered-0');
       expect(empowered0.textContent).toContain(
@@ -1857,7 +1845,7 @@ describe('Arrovian Atropos Engine & Sperner/Arrow Invariants (v0.2.0)', () => {
       fireEvent.mouseEnter(topCorner);
 
       expect(screen.getByTestId('voting-bloc-header-0').textContent).toContain(
-        'Bloc G₀: 6 Senators'
+        'Team Pizza (Bloc G₀): 6 Senators'
       );
       expect(screen.getByTestId('empty-bloc-1').textContent).toContain(
         '0 Senators in this bloc'
@@ -1934,7 +1922,7 @@ export const BriefingBanner: React.FC<BriefingBannerProps> = ({
             1. Your Role
           </div>
           <p className="text-xs leading-relaxed text-slate-300">
-            Writing the Constitution (F) for a {n}-Senator Council (V1 · Ada .. V{n} · {getVoterName(n)}) choosing among 3 candidates: ● Atlas, ■ Boreas, and ▲ Cybele.
+            Writing the Constitution (F) for {n} Friends / Senators (V1 · Ada .. V{n} · {getVoterName(n)}) Picking Dinner among 3 options: ● Pizza (A), ■ Tacos (B), and ▲ Sushi (C).
           </p>
         </div>
 
@@ -1947,7 +1935,7 @@ export const BriefingBanner: React.FC<BriefingBannerProps> = ({
             2. What a Node (k₀, k₁, k₂) Is
           </div>
           <p className="text-xs leading-relaxed text-slate-300">
-            A &quot;What-If&quot; Election Scenario where the {n} Senators split into 3 Voting Blocs (G₀: k₀, G₁: k₁, G₂: k₂)—which is why Senators in the same bloc cast identical ballots at that node.
+            A &quot;What-If&quot; Dinner Split (Election Scenario) where the {n} Friends split into 3 Dinner Teams (Team Pizza / Bloc G₀: k₀, Team Tacos / Bloc G₁: k₁, Team Sushi / Bloc G₂: k₂)—which is why Friends in the same team cast identical ballots at that node.
           </p>
         </div>
 
@@ -1957,10 +1945,10 @@ export const BriefingBanner: React.FC<BriefingBannerProps> = ({
           className="flex flex-col gap-1.5 rounded-xl border border-indigo-500/20 bg-slate-950/60 p-3"
         >
           <div className="font-mono text-xs font-bold text-indigo-300">
-            3. Why the Border Is Pre-Colored
+            3. Why the Border Is Pre-Colored (Pareto Unanimity)
           </div>
           <p className="text-xs leading-relaxed text-slate-300">
-            On the border (kᵢ = 0), one bloc has 0 Senators, so all {n} Senators unanimously agree on a pair (Pareto Unanimity). A valid Constitution cannot violate a {n}–0 unanimous vote.
+            On the outer edges (kᵢ = 0), one team has 0 friends (0 on Team Sushi, 0 on Team Pizza, 0 on Team Tacos), so all {n} unanimously prefer one option over another and the eliminated option cannot win (Pareto Unanimity).
           </p>
         </div>
 
@@ -1970,10 +1958,10 @@ export const BriefingBanner: React.FC<BriefingBannerProps> = ({
           className="flex flex-col gap-1.5 rounded-xl border border-indigo-500/20 bg-slate-950/60 p-3"
         >
           <div className="font-mono text-xs font-bold text-indigo-300">
-            4. Why You Must Rule on the Interior
+            4. Why You Must Rule on the Interior (3-Way Tie-Breaker)
           </div>
           <p className="text-xs leading-relaxed text-slate-300">
-            Every interior node has a 3-bloc Rock-Paper-Scissors circular tie (●A ≻ ■B ≻ ▲C ≻ ●A). Your Ruling (●A ≻ ▲C, ■B ≻ ●A, or ▲C ≻ ■B) cuts one link of the cycle and crowns a winner.
+            Every interior split has a 3-way Rock-Paper-Scissors circular tie (● Pizza ≻ ■ Tacos ≻ ▲ Sushi ≻ ● Pizza). Your ruling cuts one link of the cycle and crowns a winner (● Pizza (A) Wins, ■ Tacos (B) Wins, or ▲ Sushi (C) Wins).
           </p>
         </div>
 
@@ -1983,10 +1971,10 @@ export const BriefingBanner: React.FC<BriefingBannerProps> = ({
           className="flex flex-col gap-1.5 rounded-xl border border-indigo-500/20 bg-slate-950/60 p-3"
         >
           <div className="font-mono text-xs font-bold text-indigo-300">
-            5. The Single-Voter Shift &amp; Hidden Dictator Trap
+            5. The 1-Friend Shift &amp; Hidden Dictator Trap
           </div>
           <p className="text-xs leading-relaxed text-slate-300">
-            Each step shifts 1 Senator&apos;s ballot while {n - 1} Senators stay fixed. Surrounding any unit triangle with all 3 rulings lets 1 single Senator flip society&apos;s outcome against the other {n - 1}—unmasking the Hidden Dictator! By Arrow&apos;s Theorem, 100% completion is impossible; see how many elections you can adjudicate before the theorem corners you.
+            Each step moves 1 Friend between Dinner Teams while the other {n - 1} stay put. Surrounding any unit triangle with all 3 winners (Pizza, Tacos, Sushi) lets 1 single Friend flip the group&apos;s dinner choice against the other {n - 1}—unmasking the Hidden Dictator! By Arrow&apos;s Theorem, 100% completion is impossible; see how many elections you can adjudicate before the theorem corners you.
           </p>
         </div>
       </div>
@@ -2156,7 +2144,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
             className="mb-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-100"
           >
             <div className="font-semibold text-amber-200">
-              The Problem: At ({k0}, {k1}, {k2}), the {n} voters are locked in a circular tie (●A ≻ ■B ≻ ▲C ≻ ●A) because two factions always team up against the third ({k0 + k2} voters want ●A ≻ ■B, {k0 + k1} want ■B ≻ ▲C, {k1 + k2} want ▲C ≻ ●A).
+              The Problem: At ({k0}, {k1}, {k2}), the {n} voters are locked in a circular tie (● Pizza ≻ ■ Tacos ≻ ▲ Sushi ≻ ● Pizza) because two factions always team up against the third ({k0 + k2} voters want ● Pizza ≻ ■ Tacos, {k0 + k1} want ■ Tacos ≻ ▲ Sushi, {k1 + k2} want ▲ Sushi ≻ ● Pizza).
             </div>
             <div className="mt-1 text-slate-300">
               Your Job as Constitutional Architect: Pick which link of the cycle to overturn (and which Faction of voters gets to win this election) without contradicting a neighboring election where only 1 voter changed their mind!
@@ -2189,7 +2177,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
               type="button"
               disabled={disabled}
               onClick={handleClick}
-              data-testid={`color-picker-btn-${c}`}
+              data-testid={`ruling-button-${c}`}
               className={`group relative flex flex-col justify-between rounded-xl border p-3 text-left transition-all ${
                 disabled
                   ? 'cursor-not-allowed border-slate-800 bg-slate-900/40 opacity-50'
@@ -2200,7 +2188,10 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                       : 'border-slate-800 bg-slate-900/60 hover:border-slate-700 hover:bg-slate-800/60'
               }`}
             >
-              <div className="flex items-start justify-between gap-2">
+              <div
+                data-testid={`color-picker-btn-${c}`}
+                className="flex w-full items-start justify-between gap-2"
+              >
                 <div className="flex items-start gap-2.5">
                   <span
                     className="flex h-8 w-14 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-black text-slate-950 shadow-sm"
@@ -2212,17 +2203,29 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                     {meta.shapedBadge}
                   </span>
                   <div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <span className="font-mono text-sm font-bold text-slate-100">
                         Ruling {meta.ruling}
                       </span>
+                      <span
+                        className="rounded px-1.5 py-0.5 font-mono text-[10px] font-bold"
+                        style={{
+                          backgroundColor: `${meta.hexFill}20`,
+                          color: meta.hexFill,
+                        }}
+                      >
+                        {meta.teamName}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 text-xs font-black text-amber-300">
+                      {meta.crownedWinnerShort}
                     </div>
                     <div className="text-[11px] font-medium text-slate-400">
                       Empowers {meta.coalitionBlock} ({meta.coalitionRanking})
                     </div>
                     <div
                       data-testid={`crowned-winner-${c}`}
-                      className="mt-0.5 text-[11px] font-bold text-amber-300"
+                      className="mt-0.5 text-[11px] font-bold text-slate-300"
                     >
                       {meta.crownedWinnerText}
                     </div>
@@ -3145,7 +3148,14 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
             textAnchor="middle"
             className="fill-rose-400 font-bold text-xs"
           >
-            ({n}, 0, 0) · Unanimous G₀: ●A ≻ ■B ≻ ▲C [●A (Atlas) Wins]
+            All {n} on Team Pizza ({n},0,0) → ● Pizza (A) Wins
+            <tspan
+              x={topCorner.x}
+              dy="14"
+              className="fill-slate-400 font-normal text-[10px]"
+            >
+              Unanimous A ≻ B ≻ C · Ruling A ≻ C
+            </tspan>
           </text>
 
           {/* Bottom-Left Unanimous Electorate Corner */}
@@ -3155,7 +3165,14 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
             textAnchor="start"
             className="fill-emerald-400 font-bold text-xs"
           >
-            (0, {n}, 0) · Unanimous G₁: ■B ≻ ▲C ≻ ●A [■B (Boreas) Wins]
+            All {n} on Team Tacos (0,{n},0) → ■ Tacos (B) Wins
+            <tspan
+              x={bottomLeftCorner.x - 10}
+              dy="14"
+              className="fill-slate-400 font-normal text-[10px]"
+            >
+              Unanimous B ≻ C ≻ A · Ruling B ≻ A
+            </tspan>
           </text>
 
           {/* Bottom-Right Unanimous Electorate Corner */}
@@ -3165,39 +3182,67 @@ export const LatticeBoard: React.FC<LatticeBoardProps> = ({
             textAnchor="end"
             className="fill-indigo-400 font-bold text-xs"
           >
-            (0, 0, {n}) · Unanimous G₂: ▲C ≻ ●A ≻ ■B [▲C (Cybele) Wins]
+            All {n} on Team Sushi (0,0,{n}) → ▲ Sushi (C) Wins
+            <tspan
+              x={bottomRightCorner.x + 10}
+              dy="14"
+              className="fill-slate-400 font-normal text-[10px]"
+            >
+              Unanimous C ≻ A ≻ B · Ruling C ≻ B
+            </tspan>
           </text>
 
           {/* Left Pareto Boundary Edge (k2 = 0) */}
           <text
             x={leftEdgeMid.x}
-            y={leftEdgeMid.y}
+            y={leftEdgeMid.y - 7}
             textAnchor="middle"
             transform={`rotate(-60, ${leftEdgeMid.x}, ${leftEdgeMid.y})`}
             className="fill-slate-400"
           >
-            No G₂ Voters (k₂ = 0) · Unanimous B ≻ C (Pareto Forbids C ≻ B)
+            0 on Team Sushi (k₂ = 0) · All {n} prefer Tacos ≻ Sushi
+            <tspan
+              x={leftEdgeMid.x}
+              dy="14"
+              className="fill-slate-500 font-normal text-[10px]"
+            >
+              ▲ Sushi Eliminated (Forbids C ≻ B)
+            </tspan>
           </text>
 
           {/* Right Pareto Boundary Edge (k1 = 0) */}
           <text
             x={rightEdgeMid.x}
-            y={rightEdgeMid.y}
+            y={rightEdgeMid.y - 7}
             textAnchor="middle"
             transform={`rotate(60, ${rightEdgeMid.x}, ${rightEdgeMid.y})`}
             className="fill-slate-400"
           >
-            No G₁ Voters (k₁ = 0) · Unanimous A ≻ B (Pareto Forbids B ≻ A)
+            0 on Team Tacos (k₁ = 0) · All {n} prefer Pizza ≻ Tacos
+            <tspan
+              x={rightEdgeMid.x}
+              dy="14"
+              className="fill-slate-500 font-normal text-[10px]"
+            >
+              ■ Tacos Eliminated (Forbids B ≻ A)
+            </tspan>
           </text>
 
           {/* Bottom Pareto Boundary Edge (k0 = 0) */}
           <text
             x={bottomEdgeMid.x}
-            y={bottomEdgeMid.y}
+            y={bottomEdgeMid.y - 7}
             textAnchor="middle"
             className="fill-slate-400"
           >
-            No G₀ Voters (k₀ = 0) · Unanimous C ≻ A (Pareto Forbids A ≻ C)
+            0 on Team Pizza (k₀ = 0) · All {n} prefer Sushi ≻ Pizza
+            <tspan
+              x={bottomEdgeMid.x}
+              dy="14"
+              className="fill-slate-500 font-normal text-[10px]"
+            >
+              ● Pizza Eliminated (Forbids A ≻ C)
+            </tspan>
           </text>
         </g>
 
@@ -4153,7 +4198,7 @@ export const VoterRosterBar: React.FC<VoterRosterBarProps> = ({
                           className="font-mono text-xs font-bold"
                           style={{ color: meta.hexFill }}
                         >
-                          Bloc {meta.coalitionBlock}: {blocCount} Senator{blocCount === 1 ? '' : 's'} · {meta.shapedCoalitionRanking}
+                          {meta.teamName} (Bloc {meta.coalitionBlock}): {blocCount} Senator{blocCount === 1 ? '' : 's'} · {meta.shapedCoalitionRanking}
                         </span>
                       </div>
                       <div>
@@ -5361,36 +5406,40 @@ export type VertexId = string;
 
 export interface CandidateMetadata {
   readonly id: 'A' | 'B' | 'C';
-  readonly name: 'Atlas' | 'Boreas' | 'Cybele';
+  readonly name: 'Pizza' | 'Tacos' | 'Sushi';
   readonly shape: '●' | '■' | '▲';
   readonly shortTag: '●A' | '■B' | '▲C';
-  readonly fullLabel: '●A (Atlas)' | '■B (Boreas)' | '▲C (Cybele)';
+  readonly fullLabel: '● Pizza (A)' | '■ Tacos (B)' | '▲ Sushi (C)';
+  readonly teamName: 'Team Pizza' | 'Team Tacos' | 'Team Sushi';
   readonly hexColor: string;
 }
 
 export const CANDIDATES: Record<RulingColor, CandidateMetadata> = {
   0: {
     id: 'A',
-    name: 'Atlas',
+    name: 'Pizza',
     shape: '●',
     shortTag: '●A',
-    fullLabel: '●A (Atlas)',
+    fullLabel: '● Pizza (A)',
+    teamName: 'Team Pizza',
     hexColor: '#f43f5e',
   },
   1: {
     id: 'B',
-    name: 'Boreas',
+    name: 'Tacos',
     shape: '■',
     shortTag: '■B',
-    fullLabel: '■B (Boreas)',
+    fullLabel: '■ Tacos (B)',
+    teamName: 'Team Tacos',
     hexColor: '#10b981',
   },
   2: {
     id: 'C',
-    name: 'Cybele',
+    name: 'Sushi',
     shape: '▲',
     shortTag: '▲C',
-    fullLabel: '▲C (Cybele)',
+    fullLabel: '▲ Sushi (C)',
+    teamName: 'Team Sushi',
     hexColor: '#6366f1',
   },
 };
@@ -5432,25 +5481,26 @@ export interface ColorMetadata {
   readonly ruling: string;
   readonly shortBadge: string;
   readonly candidateId: 'A' | 'B' | 'C';
-  readonly candidateName: 'Atlas' | 'Boreas' | 'Cybele';
+  readonly candidateName: 'Pizza' | 'Tacos' | 'Sushi';
   readonly candidateShape: '●' | '■' | '▲';
-  readonly candidateFullLabel: '●A (Atlas)' | '■B (Boreas)' | '▲C (Cybele)';
+  readonly candidateFullLabel: '● Pizza (A)' | '■ Tacos (B)' | '▲ Sushi (C)';
+  readonly teamName: DinnerTeamName;
   readonly shapedRuling: '●A ≻ ▲C' | '■B ≻ ●A' | '▲C ≻ ■B';
   readonly shapedBadge: '● A≻C' | '■ B≻A' | '▲ C≻B';
   readonly coalitionBlock: 'G₀' | 'G₁' | 'G₂';
   readonly coalitionRanking: string;
   readonly shapedCoalitionRanking:
-    | '●A ≻ ■B ≻ ▲C'
-    | '■B ≻ ▲C ≻ ●A'
-    | '▲C ≻ ●A ≻ ■B';
+    | '● Pizza ≻ ■ Tacos ≻ ▲ Sushi'
+    | '■ Tacos ≻ ▲ Sushi ≻ ● Pizza'
+    | '▲ Sushi ≻ ● Pizza ≻ ■ Tacos';
   readonly crownedWinnerText:
-    | 'Cuts ▲C≻●A → ●A (Atlas) Wins'
-    | 'Cuts ●A≻■B → ■B (Boreas) Wins'
-    | 'Cuts ■B≻▲C → ▲C (Cybele) Wins';
+    | 'Cuts ▲Sushi≻●Pizza → ● Pizza (A) Wins'
+    | 'Cuts ●Pizza≻■Tacos → ■ Tacos (B) Wins'
+    | 'Cuts ■Tacos≻▲Sushi → ▲ Sushi (C) Wins';
   readonly crownedWinnerShort:
-    | '●A (Atlas) Wins'
-    | '■B (Boreas) Wins'
-    | '▲C (Cybele) Wins';
+    | '● Pizza (A) Wins'
+    | '■ Tacos (B) Wins'
+    | '▲ Sushi (C) Wins';
   readonly forbiddenAxis: 0 | 1 | 2;
   readonly unanimousConstraint: string;
   readonly hexFill: string;
@@ -5464,18 +5514,19 @@ export const RULING_COLORS: Record<RulingColor, ColorMetadata> = {
     ruling: 'A ≻ C',
     shortBadge: 'A≻C',
     candidateId: 'A',
-    candidateName: 'Atlas',
+    candidateName: 'Pizza',
     candidateShape: '●',
-    candidateFullLabel: '●A (Atlas)',
+    candidateFullLabel: '● Pizza (A)',
+    teamName: 'Team Pizza',
     shapedRuling: '●A ≻ ▲C',
     shapedBadge: '● A≻C',
     coalitionBlock: 'G₀',
     coalitionRanking: 'A ≻ B ≻ C',
-    shapedCoalitionRanking: '●A ≻ ■B ≻ ▲C',
-    crownedWinnerText: 'Cuts ▲C≻●A → ●A (Atlas) Wins',
-    crownedWinnerShort: '●A (Atlas) Wins',
+    shapedCoalitionRanking: '● Pizza ≻ ■ Tacos ≻ ▲ Sushi',
+    crownedWinnerText: 'Cuts ▲Sushi≻●Pizza → ● Pizza (A) Wins',
+    crownedWinnerShort: '● Pizza (A) Wins',
     forbiddenAxis: 0,
-    unanimousConstraint: 'Pareto Forbids on k₀ = 0 (Unanimous C ≻ A)',
+    unanimousConstraint: 'Pareto Forbids on k₀ = 0 (Unanimous C ≻ A · ● Pizza Eliminated)',
     hexFill: '#f43f5e',
     hexStroke: '#fda4af',
   },
@@ -5485,18 +5536,19 @@ export const RULING_COLORS: Record<RulingColor, ColorMetadata> = {
     ruling: 'B ≻ A',
     shortBadge: 'B≻A',
     candidateId: 'B',
-    candidateName: 'Boreas',
+    candidateName: 'Tacos',
     candidateShape: '■',
-    candidateFullLabel: '■B (Boreas)',
+    candidateFullLabel: '■ Tacos (B)',
+    teamName: 'Team Tacos',
     shapedRuling: '■B ≻ ●A',
     shapedBadge: '■ B≻A',
     coalitionBlock: 'G₁',
     coalitionRanking: 'B ≻ C ≻ A',
-    shapedCoalitionRanking: '■B ≻ ▲C ≻ ●A',
-    crownedWinnerText: 'Cuts ●A≻■B → ■B (Boreas) Wins',
-    crownedWinnerShort: '■B (Boreas) Wins',
+    shapedCoalitionRanking: '■ Tacos ≻ ▲ Sushi ≻ ● Pizza',
+    crownedWinnerText: 'Cuts ●Pizza≻■Tacos → ■ Tacos (B) Wins',
+    crownedWinnerShort: '■ Tacos (B) Wins',
     forbiddenAxis: 1,
-    unanimousConstraint: 'Pareto Forbids on k₁ = 0 (Unanimous A ≻ B)',
+    unanimousConstraint: 'Pareto Forbids on k₁ = 0 (Unanimous A ≻ B · ■ Tacos Eliminated)',
     hexFill: '#10b981',
     hexStroke: '#6ee7b7',
   },
@@ -5506,18 +5558,19 @@ export const RULING_COLORS: Record<RulingColor, ColorMetadata> = {
     ruling: 'C ≻ B',
     shortBadge: 'C≻B',
     candidateId: 'C',
-    candidateName: 'Cybele',
+    candidateName: 'Sushi',
     candidateShape: '▲',
-    candidateFullLabel: '▲C (Cybele)',
+    candidateFullLabel: '▲ Sushi (C)',
+    teamName: 'Team Sushi',
     shapedRuling: '▲C ≻ ■B',
     shapedBadge: '▲ C≻B',
     coalitionBlock: 'G₂',
     coalitionRanking: 'C ≻ A ≻ B',
-    shapedCoalitionRanking: '▲C ≻ ●A ≻ ■B',
-    crownedWinnerText: 'Cuts ■B≻▲C → ▲C (Cybele) Wins',
-    crownedWinnerShort: '▲C (Cybele) Wins',
+    shapedCoalitionRanking: '▲ Sushi ≻ ● Pizza ≻ ■ Tacos',
+    crownedWinnerText: 'Cuts ■Tacos≻▲Sushi → ▲ Sushi (C) Wins',
+    crownedWinnerShort: '▲ Sushi (C) Wins',
     forbiddenAxis: 2,
-    unanimousConstraint: 'Pareto Forbids on k₂ = 0 (Unanimous B ≻ C)',
+    unanimousConstraint: 'Pareto Forbids on k₂ = 0 (Unanimous B ≻ C · ▲ Sushi Eliminated)',
     hexFill: '#6366f1',
     hexStroke: '#a5b4fc',
   },
